@@ -9,20 +9,30 @@
     <title>Document</title>
 </head>
 <body>
-    <form method="GET">
-            <div class="row">
-              <div class="col-auto">
-                <div class="input-group col-auto">
-                  <div class="input-group-text">
-                    Search</div>
-                  <input type="text" class="form-control" name="search">
-                </div>
-              </div>
-              <div class="col-auto">
-                <button class="btn bg-dark text-white" type="submit">Go</button>
-              </div>
+  <div class="d-flex justify-content-center mt-5">
+  <form method="GET" class="d-flex">
+    <div class="input-group">
+      <span class="input-group-text">Search</span>
+      <input type="text" class="form-control" name="search">
+      <button class="btn bg-dark text-white ms-2" type="submit">Go</button>
+    </div>
+  </form>
+  </div>
+  <div class="d-flex justify-content-center mt-5">
+    {% for job in template_data.jobs %}
+      <div class="col-md-4 col-lg-3 mb-2">
+        <div class="p-2 card align-items-center pt-4">
+          <div class="card-body text-start">
+            {{ job.title }}
+            <div class="text-end">
+              <a href="{% url 'home.show' id=job.id %}" class="btn bg-dark text-white">Apply Now</a>
             </div>
-          </form>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+  </div>
+</div>
 </body>
 </html>
 {% endblock content %}
