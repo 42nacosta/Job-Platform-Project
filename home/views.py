@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 def index(request):
     search_term = request.GET.get('search')
     if search_term:
-        jobs = Job.objects.filter(name__icontains=search_term)
+        jobs = Job.objects.filter(title__icontains=search_term)
     else:
         jobs = Job.objects.all()
     template_data = {}
