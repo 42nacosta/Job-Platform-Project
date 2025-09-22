@@ -1,5 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
+from django.contrib.auth import login as auth_login, logout as auth_logout
+from django.contrib.auth.forms import AuthenticationForm
+from django.utils.http import url_has_allowed_host_and_scheme
 from .forms import CustomUserCreationForm, CustomErrorList, PrivacySettingsForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -13,23 +15,31 @@ def logout(request):
     return redirect('home.index')
 
 def login(request):
-    template_data = {}
-    template_data['title'] = 'Login'
-    #If going to login form
-    if request.method == 'GET':
-        return render(request, 'accounts/login.html',
-            {'template_data': template_data})
-    elif request.method == 'POST':
-        #check if user has correct username and passowrd
-        user = authenticate(request, username = request.POST['username'], password = request.POST['password'])
-        if user is None:
-            template_data['error'] = 'The username or password is incorrect.'
-            return render(request, 'accounts/login.html',
-                {'template_data': template_data})
-        else:
-            #login and authenticate user
-            auth_login(request, user)
-            return redirect('home.index')
+    template_data = {'title': 'Login'}
+    next_url = request.POST.get('next') or request.GET.get('next')
+    if next_url and not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        next_url = None
+
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            auth_login(request, form.get_user())
+            return redirect(next_url or 'home.index')
+    else:
+        form = AuthenticationForm(request)
+
+    for field in form.fields.values():
+        css_classes = field.widget.attrs.get('class', '')
+        class_tokens = css_classes.split()
+        if 'form-control' not in class_tokens:
+            class_tokens.append('form-control')
+        field.widget.attrs['class'] = ' '.join(class_tokens).strip()
+
+    template_data['form'] = form
+    if next_url:
+        template_data['next'] = next_url
+
+    return render(request, 'accounts/login.html', {'template_data': template_data})
 
 def signup(request):
     template_data = {}
@@ -45,7 +55,7 @@ def signup(request):
         #check if form is correct (same password, not common password, etc) and save user
         if form.is_valid():
             form.save()
-            return redirect('accounts.login')
+            return redirect('accounts:login')
         else:
             #pass form and errors to template and render signup again
             template_data['form'] = form

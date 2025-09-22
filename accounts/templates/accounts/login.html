@@ -1,22 +1,52 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="p-3 mt-4">
+<div class="py-5">
   <div class="container">
     <div class="row justify-content-center">
-      <div class="col-md-8">
-        <div class="card shadow p-3 mb-4 rounded">
-          <div class="card-body">
-            <h2>Sign Up</h2>
-            <hr />
-            <form method="POST">
-              {% csrf_token %}
-              {{ template_data.form.as_p }}
-              <button type="submit"
-                class="btn bg-dark text-white">Sign Up
-              </button>
-            </form>
+      <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm border-0">
+          <div class="card-body p-4">
+            <h1 class="h4 text-center mb-3">Log In</h1>
+            {% if template_data.form.non_field_errors %}
+              <div class="alert alert-danger" role="alert">
+                {{ template_data.form.non_field_errors }}
+              </div>
+            {% endif %}
+            {% with form=template_data.form %}
+              <form method="post" novalidate>
+                {% csrf_token %}
+                {% if template_data.next %}
+                  <input type="hidden" name="next" value="{{ template_data.next }}">
+                {% endif %}
+                <div class="mb-3">
+                  <label class="form-label" for="{{ form.username.id_for_label }}">Username</label>
+                  {{ form.username }}
+                  {% if form.username.errors %}
+                    <div class="invalid-feedback d-block">
+                      {{ form.username.errors|striptags }}
+                    </div>
+                  {% endif %}
+                </div>
+                <div class="mb-4">
+                  <label class="form-label" for="{{ form.password.id_for_label }}">Password</label>
+                  {{ form.password }}
+                  {% if form.password.errors %}
+                    <div class="invalid-feedback d-block">
+                      {{ form.password.errors|striptags }}
+                    </div>
+                  {% endif %}
+                </div>
+                <div class="d-grid mb-3">
+                  <button type="submit" class="btn btn-dark">Log In</button>
+                </div>
+              </form>
+            {% endwith %}
+            <p class="text-center mb-0">
+              Don't have an account?
+              <a href="{% url 'accounts:signup' %}">Sign up</a>
+            </p>
           </div>
-        </div>   
+        </div>
       </div>
     </div>
   </div>
