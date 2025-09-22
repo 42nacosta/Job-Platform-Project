@@ -1,15 +1,80 @@
-{% extends 'base.html' %}
-{% block content %}
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    
-</body>
-</html>
-{% endblock content %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 900px;">
+  <h2 class="mb-2">About This Project</h2>
+  <p class="text-muted mb-4">
+    This web app is a CS2340 (Objects & Design) group project built by Nathaniel Acosta, Jackson O'Connell, Adem Poshka, and Maitreya Kayyar.. 
+    It follows the Django <strong>MVT (Model–View–Template)</strong> architecture and targets a lightweight
+    job-seeking and matching workflow for early-career candidates and recruiters.
+  </p>
+
+  <div class="row g-3">
+    <div class="col-md-7">
+      <div class="card p-3 h-100">
+        <h5 class="mb-2">What You Can Do</h5>
+        <ul class="mb-0">
+          <li>Browse and search job postings from the home page.</li>
+          <li>Open a job detail page to view the full description.</li>
+          <li>Sign up / log in and manage your account (in progress).</li>
+          <li>Control what recruiters can see via <a href="{% url 'accounts:privacy' %}">Privacy Settings</a>.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="col-md-5">
+      <div class="card p-3 h-100">
+        <h5 class="mb-2">In Scope for This Class</h5>
+        <ul class="mb-0">
+          <li>Core job CRUD (post, edit, delete) with ownership checks.</li>
+          <li>Recruiter vs. Job-Seeker roles (basic authorization).</li>
+          <li>Applicant privacy controls (field-level visibility).</li>
+          <li>Clean, testable views and templates (no magic).</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card p-3 mt-3">
+    <h5 class="mb-2">Architecture at a Glance (MVT)</h5>
+    <ul class="mb-0">
+      <li><strong>Models</strong>: Job, Profile (1:1 with User for roles & privacy).</li>
+      <li><strong>Views</strong>: Readable functions handling queries, auth gates, and context.</li>
+      <li><strong>Templates</strong>: Bootstrap-styled pages extending a shared <code>base.html</code>.</li>
+    </ul>
+  </div>
+
+  <div class="row g-3 mt-1">
+    <div class="col-md-6">
+      <div class="card p-3 h-100">
+        <h5 class="mb-2">Roadmap (Next Iterations)</h5>
+        <ul class="mb-0">
+          <li>Job applications with status tracking.</li>
+          <li>Saved jobs & simple recommendations.</li>
+          <li>Recruiter pipeline basics (shortlist, notes).</li>
+          <li>Map views for job locations and commute radius.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card p-3 h-100">
+        <h5 class="mb-2">Team & Course</h5>
+        <p class="mb-2">
+          Built by CS2340 Section B team #7, including Nathaniel Acosta, Jackson O'Connell, Adem Poshka, and Maitreya Kayyar. Through this project, we are practicing requirements analysis, iterative design, and 
+          testable implementation. We’re optimizing for clarity, maintainability, and shipping
+          incremental value each sprint.
+        </p>
+        <ul class="mb-0">
+          <li>Sprint cadence: plan → build → demo → retro.</li>
+          <li>Definition of Done: tests pass, routes wired, templates render, UX acceptable.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-muted small mt-3">
+    Version {{ request.resolver_match.app_name|default:"home" }} · Django {{ django_version|default:"5.x" }}
+  </div>
+</div>
+{% endblock %}

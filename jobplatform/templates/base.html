@@ -25,6 +25,9 @@
           <div class="navbar-nav ms-auto navbar-ml">
             <a class="nav-link" href="{% url 'home.index' %}">Home</a>
             <a class="nav-link" href="{% url 'home.about' %}">About</a>
+            {% if request.user.is_authenticated %}
+              <li class="nav-item"><a class="nav-link" href="{% url 'accounts:privacy' %}">Privacy</a></li>
+            {% endif %}
             <div class="vr bg-white mx-2 d-none d-lg-block"></div>
           </div>
         </div>

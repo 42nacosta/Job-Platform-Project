@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4" style="max-width: 760px;">
+  <h3>{{ owner.username }}</h3>
+  {% if profile.headline %}
+    <p class="text-muted mb-3">{{ profile.headline }}</p>
+  {% endif %}
+
+  <div class="card p-3 mb-3">
+    <h6>Contact</h6>
+    {% if can_email %}<div>Email: {{ owner.email }}</div>{% endif %}
+    {% if can_phone %}<div>Phone: {{ profile.phone }}</div>{% endif %}
+    {% if not can_email and not can_phone %}
+      <div class="text-muted">Contact details are hidden.</div>
+    {% endif %}
+  </div>
+
+  <div class="card p-3 mb-3">
+    <h6>Education</h6>
+    {% if can_education and profile.education %} <pre class="mb-0">{{ profile.education }}</pre>
+    {% else %} <div class="text-muted">Hidden.</div> {% endif %}
+  </div>
+
+  <div class="card p-3 mb-3">
+    <h6>Experience</h6>
+    {% if can_experience and profile.experience %} <pre class="mb-0">{{ profile.experience }}</pre>
+    {% else %} <div class="text-muted">Hidden.</div> {% endif %}
+  </div>
+
+  {% if can_resume and profile.resume_url %}
+    <a class="btn btn-outline-primary" href="{{ profile.resume_url }}" target="_blank">View Resume</a>
+  {% endif %}
+</div>
+{% endblock %}

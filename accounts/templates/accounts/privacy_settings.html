@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4" style="max-width: 680px;">
+  <h3 class="mb-3">Privacy Settings</h3>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <!-- Profile Visibility -->
+    <div class="card p-3 mb-3">
+      <h6 class="mb-2">Profile Visibility</h6>
+
+      <!-- Render radios with proper labels -->
+      <div>
+        {% for rb in form.visibility %}
+          <div class="form-check">
+            {{ rb.tag }}
+            <label class="form-check-label" for="{{ rb.id_for_label }}">{{ rb.choice_label }}</label>
+          </div>
+        {% endfor %}
+        {% if form.visibility.errors %}
+          <div class="text-danger small mt-1">{{ form.visibility.errors|striptags }}</div>
+        {% endif %}
+      </div>
+
+      <small class="text-muted d-block mt-2">
+        <strong>Public</strong>: visible to everyone (sensitive fields still hidden unless allowed).<br>
+        <strong>Recruiters only</strong>: only recruiter accounts can view your profile.<br>
+        <strong>Private</strong>: only you and admins can view.
+      </small>
+    </div>
+
+    <!-- Recruiter field toggles -->
+    <div class="card p-3 mb-3">
+      <h6 class="mb-2">What recruiters can see</h6>
+
+      <div class="form-check">
+        {{ form.show_email_to_recruiters }}
+        <label class="form-check-label" for="{{ form.show_email_to_recruiters.id_for_label }}">
+          {{ form.show_email_to_recruiters.label }}
+        </label>
+        {% if form.show_email_to_recruiters.errors %}
+          <div class="text-danger small">{{ form.show_email_to_recruiters.errors|striptags }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-check">
+        {{ form.show_phone_to_recruiters }}
+        <label class="form-check-label" for="{{ form.show_phone_to_recruiters.id_for_label }}">
+          {{ form.show_phone_to_recruiters.label }}
+        </label>
+        {% if form.show_phone_to_recruiters.errors %}
+          <div class="text-danger small">{{ form.show_phone_to_recruiters.errors|striptags }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-check">
+        {{ form.show_resume_to_recruiters }}
+        <label class="form-check-label" for="{{ form.show_resume_to_recruiters.id_for_label }}">
+          {{ form.show_resume_to_recruiters.label }}
+        </label>
+        {% if form.show_resume_to_recruiters.errors %}
+          <div class="text-danger small">{{ form.show_resume_to_recruiters.errors|striptags }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-check">
+        {{ form.show_education_to_recruiters }}
+        <label class="form-check-label" for="{{ form.show_education_to_recruiters.id_for_label }}">
+          {{ form.show_education_to_recruiters.label }}
+        </label>
+        {% if form.show_education_to_recruiters.errors %}
+          <div class="text-danger small">{{ form.show_education_to_recruiters.errors|striptags }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-check">
+        {{ form.show_experience_to_recruiters }}
+        <label class="form-check-label" for="{{ form.show_experience_to_recruiters.id_for_label }}">
+          {{ form.show_experience_to_recruiters.label }}
+        </label>
+        {% if form.show_experience_to_recruiters.errors %}
+          <div class="text-danger small">{{ form.show_experience_to_recruiters.errors|striptags }}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+  </form>
+</div>
+{% endblock %}
