@@ -17,18 +17,25 @@
     <!--Header-->
     <nav class="p-3 navbar navbar-dark bg-dark navbar-expand-lg">
       <div class="container">
+        <a class="navbar-brand" href="{% url 'home.index' %}">GT Job Finder</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup"
           aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-          <div class="navbar-nav ms-auto navbar-ml">
+          <div class="navbar-nav ms-auto navbar-ml align-items-lg-center">
             <a class="nav-link" href="{% url 'home.index' %}">Home</a>
             <a class="nav-link" href="{% url 'home.about' %}">About</a>
             {% if request.user.is_authenticated %}
-              <li class="nav-item"><a class="nav-link" href="{% url 'accounts:privacy' %}">Privacy</a></li>
+              <a class="nav-link" href="{% url 'accounts:privacy' %}">Privacy</a>
             {% endif %}
             <div class="vr bg-white mx-2 d-none d-lg-block"></div>
+            {% if request.user.is_authenticated %}
+              <span class="navbar-text text-white">Signed in as <span class="badge bg-secondary">{{ request.user.get_username }}</span></span>
+              <a class="btn btn-outline-light ms-lg-3 mt-3 mt-lg-0" href="{% url 'accounts:logout' %}">Log Out</a>
+            {% else %}
+              <a class="btn btn-outline-light ms-lg-3 mt-3 mt-lg-0" href="{% url 'accounts:login' %}">Log In</a>
+            {% endif %}
           </div>
         </div>
       </div>
