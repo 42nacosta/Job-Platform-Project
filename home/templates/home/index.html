@@ -13,7 +13,15 @@
   <form method="GET" class="d-flex">
     <div class="input-group">
       <span class="input-group-text">Search</span>
-      <input type="text" class="form-control" name="search">
+      <select class="form-select" name="search_type">
+        <option value="title">Title</option>
+        <option value="location">Location</option>
+        <option value="category">Category</option>
+      </select>
+      <input type="number" class="form-control" name="min_salary" placeholder="Min Salary" min="0">
+      <input type="number" class="form-control" name="max_salary" placeholder="Max Salary" min="0">
+
+      <input type="text" placeholder="Search Term Here" class="form-control" name="search">
       <button class="btn bg-dark text-white ms-2" type="submit">Go</button>
     </div>
   </form>

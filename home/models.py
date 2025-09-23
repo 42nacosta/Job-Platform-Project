@@ -7,6 +7,9 @@ class Job(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=255, default="")
     description = models.TextField(max_length=1023, default="")
+    salary = models.BigIntegerField(default=0)
+    location = models.TextField(max_length=128, default="")
+    category = models.TextField(max_length=128, default="")
 
     def __str__(self):
         return str(self.id) + ' - ' + self.title
