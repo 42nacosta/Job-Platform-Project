@@ -75,7 +75,7 @@ def privacy_settings(request):
             return redirect("accounts:privacy")
     else:
         form = PrivacySettingsForm(instance=profile)
-    return render(request, "accounts/privacy_settings.html", {"form": form})
+    return render(request, "accounts/privacy_settings.html", {"form": form, "profile": profile},)
 
 def profile_detail(request, username):
     owner = get_object_or_404(User, username=username)

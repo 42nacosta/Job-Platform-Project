@@ -90,6 +90,28 @@
         {% endif %}
       </div>
     </div>
+        <h6>Contact</h6>
+        <p>Current phone: {{ profile.phone }}</p>
+        <p>Enter new information here: </p>
+        {{ form.phone }}
+
+        <h6>Education</h6>
+        <p>Current education: {{ profile.education }}</p>
+        <p>Enter new information here: </p>
+        {{ form.education }}
+
+        <h6>Experience</h6>
+        <p>Current experience: {{ profile.experience }}</p>
+        <p>Enter new information here: </p>
+        {{ form.experience }}
+
+        <h6>Resume</h6>
+        <p>Current resume: {{ profile.resume_url }}</p>
+        <p>Enter new information here: </p>
+        {{ form.resume_url }}
+    <br>
+
+    
 
     <button type="submit" class="btn btn-primary">Save</button>
   </form>
