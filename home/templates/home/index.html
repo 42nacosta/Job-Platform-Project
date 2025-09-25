@@ -13,11 +13,24 @@
   <form method="GET" class="d-flex">
     <div class="input-group">
       <span class="input-group-text">Search</span>
-      <input type="text" class="form-control" name="search">
+      <select class="form-select" name="search_type">
+        <option value="title">Title</option>
+        <option value="location">Location</option>
+        <option value="category">Category</option>
+      </select>
+      <input type="number" class="form-control" name="min_salary" placeholder="Min Salary" min="0">
+      <input type="number" class="form-control" name="max_salary" placeholder="Max Salary" min="0">
+
+      <input type="text" placeholder="Search Term Here" class="form-control" name="search">
       <button class="btn bg-dark text-white ms-2" type="submit">Go</button>
     </div>
   </form>
   </div>
+  {% if request.user.is_authenticated %}
+  <div class="d-flex justify-content-center mt-5">
+    <a href="{% url 'home.create' %}" class="btn btn-primary">Post Job</a>
+  </div>
+  {% endif %}
   <div class="d-flex justify-content-center mt-5">
     {% for job in template_data.jobs %}
       <div class="col-md-4 col-lg-3 mb-2">

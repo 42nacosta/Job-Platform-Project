@@ -30,6 +30,10 @@ class PrivacySettingsForm(forms.ModelForm):
             "show_resume_to_recruiters",
             "show_education_to_recruiters",
             "show_experience_to_recruiters",
+            "phone",
+            "education",
+            "experience",
+            "resume_url",
         )
         widgets = {
             "visibility": forms.RadioSelect,

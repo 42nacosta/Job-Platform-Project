@@ -1,3 +1,5 @@
 __pycache__/
 *.py[cod]
 *.pyo
+db.sqlite3db.sqlite3
+db.sqlite3
