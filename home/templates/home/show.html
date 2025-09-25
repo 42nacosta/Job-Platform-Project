@@ -10,11 +10,50 @@
     <p>{{ template_data.job.description }}</p>
   </div>
 
-  <div class="mt-3">
-    <a href="#" class="btn btn-success">Apply Now</a>
-    {% if request.user.is_authenticated and request.user == template_data.job.user %}
-      <a href="{% url 'home.edit' id=template_data.job.id %}" class="btn btn-secondary">Edit Job</a>
+  <div class="mt-3" id="apply">
+    {% if request.user.is_authenticated %}
+      {% if request.user != template_data.job.user %}
+        <form method="POST" action="{% url 'home.apply' id=template_data.job.id %}" class="card p-3">
+          {% csrf_token %}
+          <label for="note" class="form-label">Tailored Note (optional, 500 chars)</label>
+          <textarea id="note" name="note" class="form-control" maxlength="500" rows="3"
+            placeholder="Hi {{ template_data.job.user.username }}, I'm excited about {{ template_data.job.title }} because..."></textarea>
+          <div class="text-end mt-2">
+            <button type="submit" class="btn btn-success">Apply with One Click</button>
+          </div>
+        </form>
+      {% else %}
+        {% if template_data.applications %}
+          <div class="card p-3 mt-3">
+            <h5 class="mb-3">Applications ({{ template_data.applications|length }})</h5>
+            <div class="table-responsive">
+              <table class="table table-sm align-middle">
+                <thead><tr><th>Applicant</th><th>Note</th><th>Submitted</th></tr></thead>
+                <tbody>
+                  {% for app in template_data.applications %}
+                    <tr>
+                      <td>
+                        <a href="{% url 'accounts:profile_detail' username=app.applicant.username %}">
+                          {{ app.applicant.username }}
+                        </a>
+                      </td>
+                      <td style="white-space:pre-wrap">{{ app.note|default:"&mdash;" }}</td>
+                      <td>{{ app.created_at|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        {% endif %}
+      {% endif %}
+    {% else %}
+      <a href="{% url 'accounts:login' %}?next={% url 'home.show' id=template_data.job.id %}" class="btn btn-success">Log in to Apply</a>
     {% endif %}
   </div>
+
+  {% if request.user.is_authenticated and request.user == template_data.job.user %}
+    <a href="{% url 'home.edit' id=template_data.job.id %}" class="btn btn-secondary mt-3">Edit Job</a>
+  {% endif %}
 </div>
 {% endblock content %}

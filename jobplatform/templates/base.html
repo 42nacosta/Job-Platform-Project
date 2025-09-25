@@ -42,6 +42,13 @@
     </nav>
     <!--Header-->
     <div>
+      {% if messages %}
+      <div class="container mt-3" style="max-width:900px;">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} mb-2">{{ message }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
       {% block content %}
       {% endblock content %}
     </div>
