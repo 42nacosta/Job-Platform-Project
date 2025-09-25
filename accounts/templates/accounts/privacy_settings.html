@@ -89,6 +89,36 @@
           <div class="text-danger small">{{ form.show_experience_to_recruiters.errors|striptags }}</div>
         {% endif %}
       </div>
+
+      <div class="form-check">
+        {{ form.show_location_to_recruiters }}
+        <label class="form-check-label" for="{{ form.show_location_to_recruiters.id_for_label }}">
+          {{ form.show_location_to_recruiters.label }}
+        </label>
+        {% if form.show_location_to_recruiters.errors %}
+          <div class="text-danger small">{{ form.show_location_to_recruiters.errors|striptags }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-check">
+        {{ form.show_skills_to_recruiters }}
+        <label class="form-check-label" for="{{ form.show_skills_to_recruiters.id_for_label }}">
+          {{ form.show_skills_to_recruiters.label }}
+        </label>
+        {% if form.show_skills_to_recruiters.errors %}
+          <div class="text-danger small">{{ form.show_skills_to_recruiters.errors|striptags }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-check">
+        {{ form.show_projects_to_recruiters }}
+        <label class="form-check-label" for="{{ form.show_projects_to_recruiters.id_for_label }}">
+          {{ form.show_projects_to_recruiters.label }}
+        </label>
+        {% if form.show_projects_to_recruiters.errors %}
+          <div class="text-danger small">{{ form.show_projects_to_recruiters.errors|striptags }}</div>
+        {% endif %}
+      </div>
     </div>
         <h6>Contact</h6>
         <p>Current phone: {{ profile.phone }}</p>
@@ -109,6 +139,21 @@
         <p>Current resume: {{ profile.resume_url }}</p>
         <p>Enter new information here: </p>
         {{ form.resume_url }}
+
+        <h6>Location</h6>
+        <p>Current location: {{ profile.location }}</p>
+        <p>Enter new information here: </p>
+        {{ form.location }}
+
+        <h6>Skills</h6>
+        <p>Current skills: {{ profile.skills }}</p>
+        <p>Enter new information here: </p>
+        {{ form.skills }}
+
+        <h6>Projects</h6>
+        <p>Current projects: {{ profile.projects }}</p>
+        <p>Enter new information here: </p>
+        {{ form.projects }}
     <br>
 
     

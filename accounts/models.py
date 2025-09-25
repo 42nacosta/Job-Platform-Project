@@ -25,6 +25,9 @@ class Profile(models.Model):
     show_resume_to_recruiters = models.BooleanField(default=False)
     show_education_to_recruiters = models.BooleanField(default=False)
     show_experience_to_recruiters = models.BooleanField(default=False)
+    show_location_to_recruiters = models.BooleanField(default = False)
+    show_skills_to_recruiters = models.BooleanField(default = False)
+    show_projects_to_recruiters = models.BooleanField(default = False)
 
     # Minimal profile data placeholders (extend later)
     headline = models.CharField(max_length=120, blank=True)
@@ -32,6 +35,9 @@ class Profile(models.Model):
     education = models.TextField(blank=True)
     experience = models.TextField(blank=True)
     resume_url = models.URLField(blank=True)
+    location = models.CharField(max_length=255, blank=True, null=True)
+    skills = models.TextField(blank=True, null=True)
+    projects = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.user.username} - {'Recruiter' if self.is_recruiter else 'Candidate'}"

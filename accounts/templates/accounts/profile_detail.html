@@ -30,5 +30,23 @@
   {% if can_resume and profile.resume_url %}
     <a class="btn btn-outline-primary" href="{{ profile.resume_url }}" target="_blank">View Resume</a>
   {% endif %}
+
+  <div class="card p-3 mb-3">
+    <h6>Location</h6>
+    {% if can_location and profile.location %} <pre class="mb-0">{{ profile.location }}</pre>
+    {% else %} <div class="text-muted">Hidden.</div> {% endif %}
+  </div>
+
+  <div class="card p-3 mb-3">
+    <h6>Skills</h6>
+    {% if can_skills and profile.skills %} <pre class="mb-0">{{ profile.skills }}</pre>
+    {% else %} <div class="text-muted">Hidden.</div> {% endif %}
+  </div>
+
+  <div class="card p-3 mb-3">
+    <h6>Projects</h6>
+    {% if can_projects and profile.projects %} <pre class="mb-0">{{ profile.education }}</pre>
+    {% else %} <div class="text-muted">Hidden.</div> {% endif %}
+  </div>
 </div>
 {% endblock %}

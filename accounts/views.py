@@ -56,7 +56,6 @@ def signup(request):
         if form.is_valid():
             user = form.save()  # save the User instance
 
-            # ✅ Save recruiter flag to Profile
             is_recruiter = form.cleaned_data.get("is_recruiter", False)
             user.profile.is_recruiter = is_recruiter
             user.profile.save()
@@ -96,5 +95,8 @@ def profile_detail(request, username):
         "can_resume": profile.can_view(viewer, "resume"),
         "can_education": profile.can_view(viewer, "education"),
         "can_experience": profile.can_view(viewer, "experience"),
+        "can_location": profile.can_view(viewer, "location"),
+        "can_skills": profile.can_view(viewer, "skills"),
+        "can_projects": profile.can_view(viewer, "projects"),
     }
     return render(request, "accounts/profile_detail.html", ctx)

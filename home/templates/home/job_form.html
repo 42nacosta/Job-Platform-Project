@@ -5,7 +5,7 @@
   <form method="post">
     {% csrf_token %}
     <div class="mb-3">
-      <label class="form-label">Title</label>
+      <label class="form-label">Job Title</label>
       <input name="title" class="form-control"
              value="{% if job %}{{ job.title }}{% endif %}" required/>
     </div>
@@ -14,7 +14,7 @@
       <textarea name="description" class="form-control" rows="6" required>{% if job %}{{ job.description }}{% endif %}</textarea>
     </div>
     <div class="mb-3">
-      <label class="form-label">Location</label>
+      <label class="form-label">Location ()</label>
       <input name="location" class="form-control"
              value="{% if job %}{{ job.location }}{% endif %}"/>
     </div>

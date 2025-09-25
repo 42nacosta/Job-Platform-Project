@@ -52,10 +52,16 @@ class PrivacySettingsForm(forms.ModelForm):
             "show_resume_to_recruiters",
             "show_education_to_recruiters",
             "show_experience_to_recruiters",
+            "show_location_to_recruiters",
+            "show_skills_to_recruiters",
+            "show_projects_to_recruiters",
             "phone",
             "education",
             "experience",
             "resume_url",
+            "location",
+            "skills",
+            "projects",
         )
         widgets = {
             "visibility": forms.RadioSelect,
@@ -67,4 +73,7 @@ class PrivacySettingsForm(forms.ModelForm):
             "show_resume_to_recruiters": "Show my resume link to recruiters",
             "show_education_to_recruiters": "Show education to recruiters",
             "show_experience_to_recruiters": "Show experience to recruiters",
+            "show_location_to_recruiters": "Show location to recruiters",
+            "show_skills_to_recruiters" : "Show skills to recruiters",
+            "show_projects_to_recruiters" : "Show projects to recruiters",
         }
