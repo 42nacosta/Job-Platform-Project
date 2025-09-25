@@ -35,9 +35,11 @@ class CustomUserCreationForm(UserCreationForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.is_recruiter = self.cleaned_data.get("is_recruiter", False)
+        user.email = self.cleaned_data["email"]
         if commit:
             user.save()
+            user.profile.is_recruiter = self.cleaned_data.get("is_recruiter", False)
+            user.profile.save()
         return user
 
 class PrivacySettingsForm(forms.ModelForm):

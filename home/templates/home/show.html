@@ -48,7 +48,7 @@
         {% endif %}
       {% endif %}
     {% else %}
-      <a href="{% url 'accounts:login' %}?next={% url 'home.show' id=template_data.job.id %}" class="btn btn-success">Log in to Apply</a>
+      <a href="{% url 'accounts:login' %}?next={% url 'home.show' id=template_data.job.id %}" class="btn btn-success">Log in as a Candidate to Apply</a>
     {% endif %}
   </div>
 
