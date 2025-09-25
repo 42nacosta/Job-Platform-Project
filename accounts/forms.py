@@ -3,6 +3,7 @@ from django.forms.utils import ErrorList
 from django.utils.safestring import mark_safe
 from django import forms
 from .models import Profile
+from django.contrib.auth.models import User
 
 
 class CustomErrorList(ErrorList):
@@ -10,7 +11,19 @@ class CustomErrorList(ErrorList):
         if not self:
             return ''
         return mark_safe(''.join([f'<div class="alert alert-danger" role="alert">{e}</div>' for e in self]))
+
 class CustomUserCreationForm(UserCreationForm):
+    is_recruiter = forms.BooleanField(
+        required=False,
+        label="Are you a recruiter?",
+        help_text=None,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
+
+    class Meta:
+        model = User
+        fields = ("username", "email", "password1", "password2", "is_recruiter")
+    
     def __init__(self, *args, **kwargs):
         super(CustomUserCreationForm, self).__init__(*args, **kwargs)
         for fieldname in ['username', 'password1',
@@ -19,6 +32,13 @@ class CustomUserCreationForm(UserCreationForm):
             self.fields[fieldname].widget.attrs.update(
                 {'class': 'form-control'}
             )
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.is_recruiter = self.cleaned_data.get("is_recruiter", False)
+        if commit:
+            user.save()
+        return user
 
 class PrivacySettingsForm(forms.ModelForm):
     class Meta:

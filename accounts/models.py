@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.contrib.auth.models import User
 
 class Profile(models.Model):
     class Visibility(models.TextChoices):
@@ -33,7 +34,7 @@ class Profile(models.Model):
     resume_url = models.URLField(blank=True)
 
     def __str__(self):
-        return f"Profile<{self.user.username}>"
+        return f"{self.user.username} - {'Recruiter' if self.is_recruiter else 'Candidate'}"
 
     # Simple policy helper
     def can_view(self, viewer, field_key: str) -> bool:
@@ -61,6 +62,11 @@ class Profile(models.Model):
 
         # Non-sensitive fields (e.g., headline) are fine unless PRIVATE
         return True
+
+def is_recruiter_property(self):
+    return hasattr(self, "profile") and self.profile.is_recruiter
+    
+User.add_to_class("is_recruiter", property(is_recruiter_property))
 
 @receiver(post_save, sender=User)
 def create_profile(sender, instance, created, **kwargs):

@@ -54,7 +54,12 @@ def signup(request):
         form = CustomUserCreationForm(request.POST, error_class=CustomErrorList)
         #check if form is correct (same password, not common password, etc) and save user
         if form.is_valid():
-            form.save()
+            user = form.save()  # save the User instance
+
+            # ✅ Save recruiter flag to Profile
+            is_recruiter = form.cleaned_data.get("is_recruiter", False)
+            user.profile.is_recruiter = is_recruiter
+            user.profile.save()
             return redirect('accounts:login')
         else:
             #pass form and errors to template and render signup again

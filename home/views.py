@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Job
 from django.contrib.auth.decorators import login_required
+from decimal import Decimal
+
 # Create your views here.
 def index(request):
     search_term = request.GET.get('search')
@@ -46,7 +48,7 @@ def create_job(request):
         title = request.POST.get('title', '').strip()
         description = request.POST.get('description', '').strip()
         location = request.POST.get('location', '').strip()
-        salary = request.POST.get('salary') or 0
+        salary = Decimal(request.POST.get("salary")) or 0
         category = request.POST.get('category', '').strip()
 
         job = Job.objects.create(user=request.user, title=title, description=description,
@@ -63,7 +65,7 @@ def edit_job(request, id):
         job.title = request.POST.get('title','').strip()
         job.description = request.POST.get('description','').strip()
         job.location = request.POST.get('location','').strip()
-        job.salary = request.POST.get('salary','') or 0
+        job.salary = Decimal(request.POST.get("salary")) or 0
         job.category = request.POST.get('category','').strip()
         job.save()
         return redirect('home.show', id=job.id)

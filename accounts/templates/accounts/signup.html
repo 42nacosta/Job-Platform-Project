@@ -16,18 +16,32 @@
               <form method="post" novalidate>
                 {% csrf_token %}
                 {% for field in form %}
-                  <div class="mb-3">
-                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.help_text %}
-                      <div class="form-text">{{ field.help_text }}</div>
-                    {% endif %}
-                    {% if field.errors %}
-                      <div class="invalid-feedback d-block">
-                        {{ field.errors|striptags }}
-                      </div>
-                    {% endif %}
-                  </div>
+                  {% if field.name == "is_recruiter" %}
+                    <div class="form-check mb-3">
+                      {{ field }}
+                      <label class="form-check-label" for="{{ field.id_for_label }}">
+                        {{ field.label }}
+                      </label>
+                      {% if field.errors %}
+                        <div class="invalid-feedback d-block">
+                          {{ field.errors|striptags }}
+                        </div>
+                      {% endif %}
+                    </div>
+                  {% else %}
+                    <div class="mb-3">
+                      <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                      {{ field }}
+                        {% if field.help_text %}
+                        <div class="form-text">{{ field.help_text }}</div>
+                      {% endif %}
+                      {% if field.errors %}
+                        <div class="invalid-feedback d-block">
+                          {{ field.errors|striptags }}
+                        </div>
+                      {% endif %}
+                    </div>
+                  {% endif %}
                 {% endfor %}
                 <div class="d-grid mb-3">
                   <button type="submit" class="btn btn-dark">Sign Up</button>

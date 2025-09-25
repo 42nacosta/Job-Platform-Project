@@ -26,7 +26,7 @@
     </div>
   </form>
   </div>
-  {% if request.user.is_authenticated %}
+  {% if request.user.is_authenticated and request.user.is_recruiter %}
   <div class="d-flex justify-content-center mt-5">
     <a href="{% url 'home.create' %}" class="btn btn-primary">Post Job</a>
   </div>
@@ -38,7 +38,7 @@
           <div class="card-body text-start">
             {{ job.title }}
             <div class="text-end">
-              <a href="{% url 'home.show' id=job.id %}" class="btn bg-dark text-white">Apply Now</a>
+              <a href="{% url 'home.show' id=job.id %}" class="btn bg-dark text-white">View</a>
             </div>
           </div>
         </div>
