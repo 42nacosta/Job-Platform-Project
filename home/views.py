@@ -1,4 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.views.decorators.http import require_POST
 from .models import Job
 from django.contrib.auth.decorators import login_required
 from decimal import Decimal
@@ -35,12 +37,18 @@ def about(request):
     return render(request, 'home/about.html')
 
 def show(request, id):
-    job =  Job.objects.get(id=id)
+    job = Job.objects.get(id=id)
     template_data = {}
     template_data['title'] = job.title
     template_data['job'] = job
-    return render(request, 'home/show.html',
-                  {'template_data': template_data})
+
+    # PSEUDOCODE: surface applications only to job owner while keeping others unaware.
+    if request.user.is_authenticated and request.user == job.user:
+        template_data['applications'] = job.applications.select_related('applicant').all()
+    else:
+        template_data['applications'] = None
+
+    return render(request, 'home/show.html', {'template_data': template_data})
 
 @login_required
 def create_job(request):
@@ -70,3 +78,25 @@ def edit_job(request, id):
         job.save()
         return redirect('home.show', id=job.id)
     return render(request, 'home/job_form.html', {'template_data': {'title': 'Edit Job'}, 'job': job})
+
+
+@login_required
+@require_POST
+def apply_job(request, id):
+    job = get_object_or_404(Job, id=id)
+    note = (request.POST.get("note") or "").strip()[:500]
+
+    # Enforce single application per user per job; update note if already exists.
+    from .models import Application
+    app, created = Application.objects.get_or_create(
+        job=job, applicant=request.user, defaults={"note": note}
+    )
+    if not created:
+        app.note = note
+        app.status = Application.Status.SUBMITTED
+        app.save(update_fields=["note", "status", "updated_at"])
+        messages.success(request, "Application updated.")
+    else:
+        messages.success(request, "Application submitted.")
+
+    return redirect("home.show", id=job.id)
