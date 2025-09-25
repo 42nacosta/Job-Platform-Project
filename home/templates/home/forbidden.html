@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h3>Forbidden</h3>
+  <p>You are not authorized to edit this job.</p>
+  <a href="{% url 'home.index' %}" class="btn btn-primary">Back to Jobs</a>
+</div>
+{% endblock content %}

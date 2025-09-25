@@ -26,6 +26,11 @@
     </div>
   </form>
   </div>
+  {% if request.user.is_authenticated %}
+  <div class="d-flex justify-content-center mt-5">
+    <a href="{% url 'home.create' %}" class="btn btn-primary">Post Job</a>
+  </div>
+  {% endif %}
   <div class="d-flex justify-content-center mt-5">
     {% for job in template_data.jobs %}
       <div class="col-md-4 col-lg-3 mb-2">

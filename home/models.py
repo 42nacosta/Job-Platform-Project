@@ -7,7 +7,7 @@ class Job(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=255, default="")
     description = models.TextField(max_length=1023, default="")
-    salary = models.BigIntegerField(default=0)
+    salary = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     location = models.TextField(max_length=128, default="")
     category = models.TextField(max_length=128, default="")
 
