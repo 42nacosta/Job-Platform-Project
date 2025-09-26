@@ -31,20 +31,20 @@
     <a href="{% url 'home.create' %}" class="btn btn-primary">Post Job</a>
   </div>
   {% endif %}
-  <div class="d-flex justify-content-center mt-5">
-    {% for job in template_data.jobs %}
-      <div class="col-md-4 col-lg-3 mb-2">
-        <div class="p-2 card align-items-center pt-4">
-          <div class="card-body text-start">
-            {{ job.title }}
-            <div class="text-end">
-              <a href="{% url 'home.show' id=job.id %}" class="btn bg-dark text-white">View</a>
-            </div>
+  <div class="d-flex flex-wrap justify-content-center mt-5">
+  {% for job in template_data.jobs %}
+    <div class="p-2" style="flex: 0 0 300px; max-width: 300px;">
+      <div class="card h-100 align-items-center pt-4">
+        <div class="card-body text-start w-100">
+          <h5 class="card-title">{{ job.title }}</h5>
+          <div class="text-end">
+            <a href="{% url 'home.show' id=job.id %}" class="btn bg-dark text-white">View</a>
           </div>
         </div>
       </div>
-      {% endfor %}
-  </div>
+    </div>
+  {% endfor %}
+</div>
 </div>
 </body>
 </html>
