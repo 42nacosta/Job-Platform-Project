@@ -13,6 +13,24 @@ class CustomErrorList(ErrorList):
         return mark_safe(''.join([f'<div class="alert alert-danger" role="alert">{e}</div>' for e in self]))
 
 class CustomUserCreationForm(UserCreationForm):
+    firstName = forms.CharField(
+        max_length=30,
+        required=True,
+        label="First Name",
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    lastName = forms.CharField(
+        max_length=30,
+        required=True,
+        label="Last Name",
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    email = forms.CharField(
+        max_length=30,
+        required=True,
+        label="Email Address",
+        widget=forms.EmailInput(attrs={'class': 'form-control'})
+    )
     is_recruiter = forms.BooleanField(
         required=False,
         label="Are you a recruiter?",
@@ -22,20 +40,20 @@ class CustomUserCreationForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ("username", "email", "password1", "password2", "is_recruiter")
+        fields = ("firstName", "lastName", "username", "email", "password1", "password2", "is_recruiter")
     
     def __init__(self, *args, **kwargs):
         super(CustomUserCreationForm, self).__init__(*args, **kwargs)
-        for fieldname in ['username', 'password1',
-        'password2']:
+        for fieldname in ['username', 'password1', 'password2']:
             self.fields[fieldname].help_text = None
-            self.fields[fieldname].widget.attrs.update(
-                {'class': 'form-control'}
-            )
+            self.fields[fieldname].widget.attrs.update({'class': 'form-control'})
 
     def save(self, commit=True):
         user = super().save(commit=False)
+        user.first_name = self.cleaned_data["firstName"]
+        user.last_name = self.cleaned_data["lastName"]
         user.email = self.cleaned_data["email"]
+
         if commit:
             user.save()
             user.profile.is_recruiter = self.cleaned_data.get("is_recruiter", False)
@@ -55,6 +73,8 @@ class PrivacySettingsForm(forms.ModelForm):
             "show_location_to_recruiters",
             "show_skills_to_recruiters",
             "show_projects_to_recruiters",
+            "show_firstName_to_recruiters",
+            "show_lastName_to_recruiters",
             "phone",
             "education",
             "experience",
@@ -62,6 +82,9 @@ class PrivacySettingsForm(forms.ModelForm):
             "location",
             "skills",
             "projects",
+            "firstName",
+            "lastName",
+            "email", 
         )
         widgets = {
             "visibility": forms.RadioSelect,
@@ -76,4 +99,6 @@ class PrivacySettingsForm(forms.ModelForm):
             "show_location_to_recruiters": "Show location to recruiters",
             "show_skills_to_recruiters" : "Show skills to recruiters",
             "show_projects_to_recruiters" : "Show projects to recruiters",
+            "show_firstName_to_recruiters" : "Show first name to recruiters",
+            "show_lastName_to_recruiters" : "Show last name to recruiters",
         }

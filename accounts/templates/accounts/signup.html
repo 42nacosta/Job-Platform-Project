@@ -15,6 +15,7 @@
             {% with form=template_data.form %}
               <form method="post" novalidate>
                 {% csrf_token %}
+
                 {% for field in form %}
                   {% if field.name == "is_recruiter" %}
                     <div class="form-check mb-3">
@@ -32,7 +33,7 @@
                     <div class="mb-3">
                       <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
                       {{ field }}
-                        {% if field.help_text %}
+                      {% if field.help_text %}
                         <div class="form-text">{{ field.help_text }}</div>
                       {% endif %}
                       {% if field.errors %}
@@ -43,6 +44,7 @@
                     </div>
                   {% endif %}
                 {% endfor %}
+
                 <div class="d-grid mb-3">
                   <button type="submit" class="btn btn-dark">Sign Up</button>
                 </div>

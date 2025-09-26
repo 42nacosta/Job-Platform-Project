@@ -79,7 +79,7 @@ def privacy_settings(request):
             return redirect("accounts:privacy")
     else:
         form = PrivacySettingsForm(instance=profile)
-    return render(request, "accounts/privacy_settings.html", {"form": form, "profile": profile},)
+    return render(request, "accounts/privacy_settings.html", {"form": form, "profile": profile})
 
 def profile_detail(request, username):
     owner = get_object_or_404(User, username=username)
@@ -98,5 +98,7 @@ def profile_detail(request, username):
         "can_location": profile.can_view(viewer, "location"),
         "can_skills": profile.can_view(viewer, "skills"),
         "can_projects": profile.can_view(viewer, "projects"),
+        "can_firstName": profile.can_view(viewer, "firstName"),
+        "can_lasttName": profile.can_view(viewer, "lastName"),
     }
     return render(request, "accounts/profile_detail.html", ctx)

@@ -4,6 +4,7 @@ from django.views.decorators.http import require_POST
 from .models import Job
 from django.contrib.auth.decorators import login_required
 from decimal import Decimal
+from accounts.models import Profile
 
 # Create your views here.
 def index(request):
@@ -100,3 +101,49 @@ def apply_job(request, id):
         messages.success(request, "Application submitted.")
 
     return redirect("home.show", id=job.id)
+
+@login_required
+def candidates(request):
+    # Check if the user is a recruiter
+    if not request.user.profile.is_recruiter:
+        return render(request, "home/not_allowed.html")  # or redirect to home
+
+    search_skills = request.GET.get("skills", "")
+    search_location = request.GET.get("location", "")
+    search_projects = request.GET.get("projects", "")
+
+    if search_skills:
+        profiles = profiles.filter(skills__icontains=search_skills)
+    if search_location:
+        profiles = profiles.filter(location__icontains=search_location)
+    if search_projects:
+        profiles = profiles.filter(projects__icontains=search_projects)
+
+    profiles = Profile.objects.filter(is_recruiter=False)
+
+    safe_profiles = []
+    for profile in profiles:
+        if profile.visibility == Profile.Visibility.PRIVATE:
+            # Nobody can see private profiles
+            continue
+        else:
+            safe_profiles.append({
+                "firstName": profile.firstName if profile.show_firstName_to_recruiters else None,
+                "lastName": profile.lastName if profile.show_lastName_to_recruiters else None,
+                "email": profile.email if profile.show_email_to_recruiters else None,
+                "phone": profile.phone if profile.show_phone_to_recruiters else None,
+                "location": profile.location if profile.show_location_to_recruiters else None,
+                "skills": profile.skills if profile.show_skills_to_recruiters else None,
+                "projects": profile.projects if profile.show_projects_to_recruiters else None,
+                "education": profile.education if profile.show_education_to_recruiters else None,
+                "experience": profile.experience if profile.show_experience_to_recruiters else None,
+                "resume_url": profile.resume_url if profile.show_resume_to_recruiters else None,
+        })
+
+    context = {
+        "profiles": safe_profiles,
+        "search_skills": search_skills,
+        "search_location": search_location,
+        "search_projects": search_projects,
+    }
+    return render(request, "home/candidates.html", context)

@@ -7,6 +7,18 @@
   {% endif %}
 
   <div class="card p-3 mb-3">
+    <h6>First Name</h6>
+    {% if can_firstName and profile.firstName %} <pre class="mb-0">{{ profile.firstName }}</pre>
+    {% else %} <div class="text-muted">Hidden.</div> {% endif %}
+  </div>
+
+  <div class="card p-3 mb-3">
+    <h6>Last Name</h6>
+    {% if can_lastName and profile.lastName %} <pre class="mb-0">{{ profile.lastName }}</pre>
+    {% else %} <div class="text-muted">Hidden.</div> {% endif %}
+  </div>
+
+  <div class="card p-3 mb-3">
     <h6>Contact</h6>
     {% if can_email %}<div>Email: {{ owner.email }}</div>{% endif %}
     {% if can_phone %}<div>Phone: {{ profile.phone }}</div>{% endif %}
@@ -45,7 +57,7 @@
 
   <div class="card p-3 mb-3">
     <h6>Projects</h6>
-    {% if can_projects and profile.projects %} <pre class="mb-0">{{ profile.education }}</pre>
+    {% if can_projects and profile.projects %} <pre class="mb-0">{{ profile.projects }}</pre>
     {% else %} <div class="text-muted">Hidden.</div> {% endif %}
   </div>
 </div>

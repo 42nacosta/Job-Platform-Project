@@ -41,6 +41,26 @@
       <h6 class="mb-2">What recruiters can see</h6>
 
       <div class="form-check">
+        {{ form.show_firstName_to_recruiters }}
+        <label class="form-check-label" for="{{ form.show_firstName_to_recruiters.id_for_label }}">
+          {{ form.show_firstName_to_recruiters.label }}
+        </label>
+        {% if form.show_firstName_to_recruiters.errors %}
+          <div class="text-danger small">{{ form.show_firstName_to_recruiters.errors|striptags }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-check">
+        {{ form.show_lastName_to_recruiters }}
+        <label class="form-check-label" for="{{ form.show_lastName_to_recruiters.id_for_label }}">
+          {{ form.show_lastName_to_recruiters.label }}
+        </label>
+        {% if form.show_lastName_to_recruiters.errors %}
+          <div class="text-danger small">{{ form.show_lastName_to_recruiters.errors|striptags }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-check">
         {{ form.show_email_to_recruiters }}
         <label class="form-check-label" for="{{ form.show_email_to_recruiters.id_for_label }}">
           {{ form.show_email_to_recruiters.label }}
@@ -120,6 +140,21 @@
         {% endif %}
       </div>
     </div>
+        <h6>First Name</h6>
+        <p>Current first name: {{ profile.firstName }}</p>
+        <p>Enter new information here: </p>
+        {{ form.firstName }}
+
+        <h6>Last Name</h6>
+        <p>Current last name: {{ profile.lastName }}</p>
+        <p>Enter new information here: </p>
+        {{ form.lastName }}
+
+        <h6>Email</h6>
+        <p>Current Email: {{ profile.email }}</p>
+        <p>Enter new information here: </p>
+        {{ form.email }}
+
         <h6>Contact</h6>
         <p>Current phone: {{ profile.phone }}</p>
         <p>Enter new information here: </p>

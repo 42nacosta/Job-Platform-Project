@@ -28,9 +28,12 @@ class Profile(models.Model):
     show_location_to_recruiters = models.BooleanField(default = False)
     show_skills_to_recruiters = models.BooleanField(default = False)
     show_projects_to_recruiters = models.BooleanField(default = False)
+    show_firstName_to_recruiters = models.BooleanField(default = False)
+    show_lastName_to_recruiters = models.BooleanField(default = False)
 
     # Minimal profile data placeholders (extend later)
     headline = models.CharField(max_length=120, blank=True)
+    email = models.CharField(max_length=30, blank=True)
     phone = models.CharField(max_length=30, blank=True)
     education = models.TextField(blank=True)
     experience = models.TextField(blank=True)
@@ -38,6 +41,8 @@ class Profile(models.Model):
     location = models.CharField(max_length=255, blank=True, null=True)
     skills = models.TextField(blank=True, null=True)
     projects = models.TextField(blank=True, null=True)
+    firstName = models.CharField(max_length=30, blank=True, null=True)
+    lastName = models.CharField(max_length=30, blank=True, null=True)
 
     def __str__(self):
         return f"{self.user.username} - {'Recruiter' if self.is_recruiter else 'Candidate'}"
@@ -59,7 +64,7 @@ class Profile(models.Model):
                 return False
 
         # Only recruiter-visible fields are governed by toggles
-        sensitive = {"email", "phone", "resume", "education", "experience"}
+        sensitive = {"firstName", "lastName", "email", "phone", "resume", "education", "experience", "locations", "skills", "projects"}
         if field_key in sensitive:
             if is_viewer_recruiter:
                 return getattr(self, f"show_{field_key}_to_recruiters", False)
@@ -77,7 +82,10 @@ User.add_to_class("is_recruiter", property(is_recruiter_property))
 @receiver(post_save, sender=User)
 def create_profile(sender, instance, created, **kwargs):
     if created:
-        Profile.objects.create(user=instance)
+        Profile.objects.create(user=instance,
+            firstName=instance.first_name,
+            lastName=instance.last_name,
+            email=instance.email,)
 
 @receiver(post_save, sender=User)
 def save_profile(sender, instance, **kwargs):
