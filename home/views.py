@@ -104,13 +104,26 @@ def apply_job(request, id):
 
 @login_required
 def candidates(request):
-    # Check if the user is a recruiter
+    # Only recruiters can view
     if not request.user.profile.is_recruiter:
-        return render(request, "home/not_allowed.html")  # or redirect to home
+        return render(request, "home/not_allowed.html", status=403)
 
-    search_skills = request.GET.get("skills", "")
-    search_location = request.GET.get("location", "")
-    search_projects = request.GET.get("projects", "")
+    profiles = (
+        Profile.objects
+        .select_related("user")
+        .filter(
+            is_recruiter=False,
+            user__is_active=True,
+            user__is_staff=False,
+            user__is_superuser=False,
+        )
+        .exclude(user=request.user)
+    )
+
+    # Searches
+    search_skills = (request.GET.get("skills") or "").strip()
+    search_location = (request.GET.get("location") or "").strip()
+    search_projects = (request.GET.get("projects") or "").strip()
 
     if search_skills:
         profiles = profiles.filter(skills__icontains=search_skills)
@@ -119,25 +132,23 @@ def candidates(request):
     if search_projects:
         profiles = profiles.filter(projects__icontains=search_projects)
 
-    profiles = Profile.objects.filter(is_recruiter=False)
-
     safe_profiles = []
     for profile in profiles:
-        if profile.visibility == Profile.Visibility.PRIVATE:
-            # Nobody can see private profiles
+        if getattr(Profile, "Visibility", None) and profile.visibility == Profile.Visibility.PRIVATE:
             continue
-        else:
-            safe_profiles.append({
-                "firstName": profile.firstName if profile.show_firstName_to_recruiters else None,
-                "lastName": profile.lastName if profile.show_lastName_to_recruiters else None,
-                "email": profile.email if profile.show_email_to_recruiters else None,
-                "phone": profile.phone if profile.show_phone_to_recruiters else None,
-                "location": profile.location if profile.show_location_to_recruiters else None,
-                "skills": profile.skills if profile.show_skills_to_recruiters else None,
-                "projects": profile.projects if profile.show_projects_to_recruiters else None,
-                "education": profile.education if profile.show_education_to_recruiters else None,
-                "experience": profile.experience if profile.show_experience_to_recruiters else None,
-                "resume_url": profile.resume_url if profile.show_resume_to_recruiters else None,
+
+        safe_profiles.append({
+            "firstName": profile.firstName if getattr(profile, "show_firstName_to_recruiters", False) else None,
+            "lastName": profile.lastName if getattr(profile, "show_lastName_to_recruiters", False) else None,
+            "email": profile.email if getattr(profile, "show_email_to_recruiters", False) else None,
+            "phone": profile.phone if getattr(profile, "show_phone_to_recruiters", False) else None,
+            "location": profile.location if getattr(profile, "show_location_to_recruiters", False) else None,
+            "skills": profile.skills if getattr(profile, "show_skills_to_recruiters", False) else None,
+            "projects": profile.projects if getattr(profile, "show_projects_to_recruiters", False) else None,
+            "education": profile.education if getattr(profile, "show_education_to_recruiters", False) else None,
+            "experience": profile.experience if getattr(profile, "show_experience_to_recruiters", False) else None,
+            "resume_url": profile.resume_url if getattr(profile, "show_resume_to_recruiters", False) else None,
+            "username": (profile.user.username if profile.user and profile.user.username else None),
         })
 
     context = {

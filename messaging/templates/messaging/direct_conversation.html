@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4" style="max-width:800px;">
+  <h3>Conversation with {{ other.username }}</h3>
+
+  <ul style="list-style:none; padding:0;">
+    {% for m in conv.messages.all %}
+      <li style="margin:10px 0; padding:8px; border:1px solid #ddd; border-radius:8px;">
+        <div><strong>{{ m.sender.username }}</strong> · {{ m.created_at|date:"Y-m-d H:i" }}</div>
+        <div>{{ m.body|linebreaksbr }}</div>
+      </li>
+    {% empty %}
+      <li>No messages yet. Start the conversation below.</li>
+    {% endfor %}
+  </ul>
+
+  <form method="post" action="{% url 'messaging:send_direct_message' other.username %}">
+    {% csrf_token %}
+    <textarea name="body" rows="3" maxlength="2000" required style="width:100%;" placeholder="Write a message…"></textarea>
+    <div class="text-end mt-2">
+      <button class="btn btn-primary" type="submit">Send</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

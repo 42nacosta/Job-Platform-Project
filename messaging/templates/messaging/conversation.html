@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Conversation — {{ application.job.title }} with {{ application.applicant.username }}</h2>
+
+<ul>
+  {% for m in conv.messages.all %}
+    <li style="margin-bottom:8px;">
+      <strong>{{ m.sender.username }}</strong> — {{ m.created_at|date:"Y-m-d H:i" }}<br>
+      {{ m.body|linebreaksbr }}
+    </li>
+  {% empty %}
+    <li>No messages yet.</li>
+  {% endfor %}
+</ul>
+
+<form method="post" action="{% url 'messaging:send_message' application.id %}">
+  {% csrf_token %}
+  <textarea name="body" rows="3" maxlength="2000" placeholder="Write a message…" required></textarea>
+  <br>
+  <button type="submit">Send</button>
+</form>
+{% endblock %}

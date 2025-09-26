@@ -5,16 +5,13 @@
   <h3>Search Candidates</h3>
   <form method="get" class="row g-2 mb-4">
     <div class="col-md-4">
-      <input type="text" name="skills" class="form-control" placeholder="Search by skills"
-             value="{{ search_skills }}">
+      <input type="text" name="skills" class="form-control" placeholder="Search by skills" value="{{ search_skills }}">
     </div>
     <div class="col-md-4">
-      <input type="text" name="location" class="form-control" placeholder="Search by location"
-             value="{{ search_location }}">
+      <input type="text" name="location" class="form-control" placeholder="Search by location" value="{{ search_location }}">
     </div>
     <div class="col-md-4">
-      <input type="text" name="projects" class="form-control" placeholder="Search by projects"
-             value="{{ search_projects }}">
+      <input type="text" name="projects" class="form-control" placeholder="Search by projects" value="{{ search_projects }}">
     </div>
     <div class="col-12 mt-2">
       <button type="submit" class="btn btn-primary">Search</button>
@@ -22,57 +19,39 @@
   </form>
 
   <h4>Candidate Results</h4>
-  {% if profiles %}
-    <ul class="list-group">
-      {% for profile in profiles %}
-        <div class="card p-3 mb-3">
-        {% if profile.firstName %}
-            <h5>First Name: {{ profile.firstName }}</h5>
-        {% endif %}
 
-        {% if profile.lastName %}
-            <h5>Last Name: {{ profile.lastName }}</h5>
-        {% endif %}
+  <ul class="list-group">
+    {% for profile in profiles %}
+      <li class="list-group-item">
+        <div class="card p-3 mb-0 border-0">
+          {% if profile.firstName %}<h5>First Name: {{ profile.firstName }}</h5>{% endif %}
+          {% if profile.lastName %}<h5>Last Name: {{ profile.lastName }}</h5>{% endif %}
+          {% if profile.email %}<p>Email: {{ profile.email }}</p>{% endif %}
+          {% if profile.phone %}<p>Phone: {{ profile.phone }}</p>{% endif %}
+          {% if profile.location %}<p>Location: {{ profile.location }}</p>{% endif %}
+          {% if profile.skills %}<p>Skills: {{ profile.skills }}</p>{% endif %}
+          {% if profile.projects %}<p>Projects: {{ profile.projects }}</p>{% endif %}
+          {% if profile.education %}<p>Education: {{ profile.education }}</p>{% endif %}
+          {% if profile.experience %}<p>Experience: {{ profile.experience }}</p>{% endif %}
+          {% if profile.resume_url %}<p><a href="{{ profile.resume_url }}" target="_blank">View Resume</a></p>{% endif %}
 
-        {% if profile.email %}
-            <p>Email: {{ profile.email }}</p>
-        {% endif %}
+          {# Show DM button to recruiters if we have a valid username and it's not you #}
+          {% if request.user.is_authenticated and request.user.profile.is_recruiter %}
+            {% if profile.username and profile.username != request.user.username %}
+              <a class="btn btn-sm btn-primary mt-2"
+                 href="{% url 'messaging:direct_conversation' profile.username %}">
+                Message
+              </a>
+            {% else %}
+              <p class="text-muted small mt-2">Messaging unavailable (no linked user).</p>
+            {% endif %}
+          {% endif %}
+        </div>
+      </li>
+    {% empty %}
+      <li class="list-group-item text-muted">No candidates found.</li>
+    {% endfor %}
+  </ul>
 
-        {% if profile.phone %}
-            <p>Phone: {{ profile.phone }}</p>
-        {% endif %}
-
-        {% if profile.location %}
-            <p>Location: {{ profile.location }}</p>
-        {% endif %}
-
-        {% if profile.skills %}
-            <p>Skills: {{ profile.skills }}</p>
-        {% endif %}
-
-        {% if profile.projects %}
-            <p>Projects: {{ profile.projects }}</p>
-        {% endif %}
-
-        {% if profile.education %}
-            <p>Education: {{ profile.education }}</p>
-        {% endif %}
-
-        {% if profile.experience %}
-            <p>Experience: {{ profile.experience }}</p>
-        {% endif %}
-        
-
-        {% if profile.resume_url %}
-      <p><a href="{{ profile.resume_url }}" target="_blank">View Resume</a></p>
-    {% endif %}
-  </div>
-{% empty %}
-  <p>No candidates found.</p>
-{% endfor %}
-    </ul>
-  {% else %}
-    <p>No candidates match your search.</p>
-  {% endif %}
 </div>
 {% endblock %}
