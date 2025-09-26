@@ -105,8 +105,6 @@ def apply_job(request, id):
 @login_required
 def candidates(request):
     # Only recruiters can view
-    if not request.user.profile.is_recruiter:
-        return render(request, "home/not_allowed.html", status=403)
 
     profiles = (
         Profile.objects
