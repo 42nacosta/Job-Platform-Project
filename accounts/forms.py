@@ -2,6 +2,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.forms.utils import ErrorList
 from django.utils.safestring import mark_safe
 from django import forms
+from django.core.validators import RegexValidator
 from .models import Profile
 from django.contrib.auth.models import User
 
@@ -61,6 +62,20 @@ class CustomUserCreationForm(UserCreationForm):
         return user
 
 class PrivacySettingsForm(forms.ModelForm):
+    phone = forms.CharField(
+        required=False,
+        max_length=30,
+        validators=[RegexValidator(r"^\d*$", "Enter numbers only.")],
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "inputmode": "numeric",
+                "pattern": "[0-9]*",
+                "placeholder": "Digits only",
+            }
+        ),
+    )
+
     class Meta:
         model = Profile
         fields = (
@@ -87,7 +102,11 @@ class PrivacySettingsForm(forms.ModelForm):
             "email", 
         )
         widgets = {
-            "visibility": forms.RadioSelect,
+            "visibility": forms.RadioSelect(attrs={"class": "form-check-input"}),
+            "education": forms.Textarea(attrs={"rows": 3}),
+            "experience": forms.Textarea(attrs={"rows": 3}),
+            "skills": forms.Textarea(attrs={"rows": 3}),
+            "projects": forms.Textarea(attrs={"rows": 3}),
         }
         labels = {
             "visibility": "Who can view my profile?",
@@ -102,3 +121,32 @@ class PrivacySettingsForm(forms.ModelForm):
             "show_firstName_to_recruiters" : "Show first name to recruiters",
             "show_lastName_to_recruiters" : "Show last name to recruiters",
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        checkbox_fields = [
+            "show_email_to_recruiters",
+            "show_phone_to_recruiters",
+            "show_resume_to_recruiters",
+            "show_education_to_recruiters",
+            "show_experience_to_recruiters",
+            "show_location_to_recruiters",
+            "show_skills_to_recruiters",
+            "show_projects_to_recruiters",
+            "show_firstName_to_recruiters",
+            "show_lastName_to_recruiters",
+        ]
+
+        for name, field in self.fields.items():
+            widget = field.widget
+            if name in checkbox_fields and isinstance(widget, forms.CheckboxInput):
+                existing = widget.attrs.get("class", "")
+                widget.attrs["class"] = f"{existing} form-check-input".strip()
+            elif isinstance(widget, (forms.TextInput, forms.EmailInput, forms.URLInput, forms.Textarea)):
+                existing = widget.attrs.get("class", "")
+                widget.attrs["class"] = f"{existing} form-control".strip()
+            elif isinstance(widget, forms.RadioSelect):
+                widget.attrs["class"] = "form-check-input"
+
+        self.fields["email"].widget.attrs.setdefault("placeholder", "name@example.com")
+        self.fields["resume_url"].widget.attrs.setdefault("placeholder", "https://...")

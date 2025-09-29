@@ -16,22 +16,24 @@ def index(request):
     jobs = Job.objects.all()
 
     if search_term:
-        if search_type == 'title':
-            jobs = Job.objects.filter(title__icontains=search_term)
-        elif search_type == 'location':
-            jobs = Job.objects.filter(location__icontains=search_term)
-        elif search_type == 'category':
-            jobs = Job.objects.filter(category__icontains=search_term)
+        if search_type in {'title', 'location', 'category'}:
+            lookup = {f"{search_type}__icontains": search_term}
         else:
-            jobs = Job.objects.filter(title__icontains=search_term)
+            lookup = {"title__icontains": search_term}
+        jobs = jobs.filter(**lookup)
     if min_salary:
-        jobs = Job.objects.filter(salary__gte=min_salary)
+        jobs = jobs.filter(salary__gte=min_salary)
     if max_salary:
-        jobs = Job.objects.filter(salary__lte=max_salary)
+        jobs = jobs.filter(salary__lte=max_salary)
 
-    template_data = {}
-    template_data['title'] = 'Jobs'
-    template_data['jobs'] = jobs
+    template_data = {
+        'title': 'Jobs',
+        'jobs': jobs,
+        'search_term': search_term or '',
+        'search_type': search_type or 'title',
+        'min_salary': min_salary or '',
+        'max_salary': max_salary or '',
+    }
     return render(request, 'home/index.html', {'template_data': template_data})
 
 def about(request):
