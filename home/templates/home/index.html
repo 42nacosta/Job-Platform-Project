@@ -1,51 +1,80 @@
 {% extends 'base.html' %}
-{% block content %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-  <div class="d-flex justify-content-center mt-5">
-  <form method="GET" class="d-flex">
-    <div class="input-group">
-      <span class="input-group-text">Search</span>
-      <select class="form-select" name="search_type">
-        <option value="title">Title</option>
-        <option value="location">Location</option>
-        <option value="category">Category</option>
-      </select>
-      <input type="number" class="form-control" name="min_salary" placeholder="Min Salary" min="0">
-      <input type="number" class="form-control" name="max_salary" placeholder="Max Salary" min="0">
+{% load humanize %}
 
-      <input type="text" placeholder="Search Term Here" class="form-control" name="search">
-      <button class="btn bg-dark text-white ms-2" type="submit">Go</button>
+{% block content %}
+<div class="container" style="max-width: 1040px;">
+  <section class="bubble-card mb-4">
+    <div class="d-flex flex-column flex-lg-row gap-3 align-items-lg-end">
+      <div class="flex-grow-1">
+        <h1 class="h3 mb-1">Find your next role</h1>
+        <p class="mb-0 link-muted">Filter roles by search type and salary range to narrow the list.</p>
+      </div>
+      {% if request.user.is_authenticated and request.user.is_recruiter %}
+        <a href="{% url 'home.create' %}" class="btn btn-primary px-4">Post a job</a>
+      {% endif %}
     </div>
-  </form>
-  </div>
-  {% if request.user.is_authenticated and request.user.is_recruiter %}
-  <div class="d-flex justify-content-center mt-5">
-    <a href="{% url 'home.create' %}" class="btn btn-primary">Post Job</a>
-  </div>
-  {% endif %}
-  <div class="d-flex flex-wrap justify-content-center mt-5">
-  {% for job in template_data.jobs %}
-    <div class="p-2" style="flex: 0 0 300px; max-width: 300px;">
-      <div class="card h-100 align-items-center pt-4">
-        <div class="card-body text-start w-100">
-          <h5 class="card-title">{{ job.title }}</h5>
-          <div class="text-end">
-            <a href="{% url 'home.show' id=job.id %}" class="btn bg-dark text-white">View</a>
+
+    <form method="GET" class="mt-4">
+      <div class="row g-3 align-items-end">
+        <div class="col-12 col-md-3">
+          <label for="search_type" class="form-label mb-1">Search by</label>
+          <select class="form-select" id="search_type" name="search_type">
+            <option value="title" {% if template_data.search_type == 'title' %}selected{% endif %}>Title</option>
+            <option value="location" {% if template_data.search_type == 'location' %}selected{% endif %}>Location</option>
+            <option value="category" {% if template_data.search_type == 'category' %}selected{% endif %}>Category</option>
+          </select>
+        </div>
+        <div class="col-12 col-md-3">
+          <label for="min_salary" class="form-label mb-1">Min salary</label>
+          <input type="number" class="form-control" id="min_salary" name="min_salary" placeholder="0" min="0" value="{{ template_data.min_salary }}">
+        </div>
+        <div class="col-12 col-md-3">
+          <label for="max_salary" class="form-label mb-1">Max salary</label>
+          <input type="number" class="form-control" id="max_salary" name="max_salary" placeholder="150000" min="0" value="{{ template_data.max_salary }}">
+        </div>
+        <div class="col-12 col-md-3">
+          <label for="search" class="form-label mb-1">Search term</label>
+          <div class="input-group">
+            <input type="text" id="search" placeholder="e.g. Backend" class="form-control" name="search" value="{{ template_data.search_term }}">
+            <button class="btn btn-primary" type="submit">Search</button>
           </div>
         </div>
       </div>
+    </form>
+  </section>
+
+  <section class="mt-4">
+    <div class="row g-4">
+      {% for job in template_data.jobs %}
+        <div class="col-12 col-md-6 col-xl-4">
+          <article class="card h-100 p-4 hover-float">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <h5 class="mb-0">{{ job.title }}</h5>
+              {% if job.category %}
+                <span class="pill-tag">{{ job.category }}</span>
+              {% endif %}
+            </div>
+            {% if job.location %}
+              <p class="mb-2 link-muted">{{ job.location }}</p>
+            {% endif %}
+            <p class="mb-3 text-success fw-semibold">
+              $ {{ job.salary|floatformat:0|intcomma }}
+            </p>
+            <div class="d-flex justify-content-end">
+              <a href="{% url 'home.show' id=job.id %}" class="btn btn-outline-light">View details</a>
+            </div>
+          </article>
+        </div>
+      {% empty %}
+        <div class="col-12">
+          <div class="card p-4">
+            <h5 class="mb-2">No roles match your filters yet</h5>
+            <p class="mb-0 link-muted">Try widening the salary range or search term to explore more listings.</p>
+          </div>
+        </div>
+      {% endfor %}
     </div>
-  {% endfor %}
-  </div>
+  </section>
 </div>
-</body>
-</html>
 {% endblock content %}

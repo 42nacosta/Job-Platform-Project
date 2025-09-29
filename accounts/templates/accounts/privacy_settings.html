@@ -2,198 +2,235 @@
 {% load static %}
 
 {% block content %}
-<div class="container mt-4" style="max-width: 680px;">
-  <h3 class="mb-3">Privacy Settings</h3>
-
-  <form method="post" novalidate>
-    {% csrf_token %}
-
-    {% if form.non_field_errors %}
-      <div class="alert alert-danger">{{ form.non_field_errors }}</div>
-    {% endif %}
-
-    <!-- Profile Visibility -->
-    <div class="card p-3 mb-3">
-      <h6 class="mb-2">Profile Visibility</h6>
-
-      <!-- Render radios with proper labels -->
+<div class="container" style="max-width: 880px;">
+  <section class="bubble-card">
+    <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
       <div>
-        {% for rb in form.visibility %}
-          <div class="form-check">
-            {{ rb.tag }}
-            <label class="form-check-label" for="{{ rb.id_for_label }}">{{ rb.choice_label }}</label>
-          </div>
-        {% endfor %}
+        <h2 class="mb-2">Privacy settings</h2>
+        <p class="link-muted mb-0">Control who can view your profile and what details recruiters can see.</p>
+      </div>
+      <div class="align-self-md-center">
+        <span class="pill-tag">Signed in as {{ request.user.username }}</span>
+      </div>
+    </div>
+
+    <form method="post" novalidate class="mt-4">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger mb-4">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      <div class="card p-4 mb-4">
+        <h6 class="section-title">Profile visibility</h6>
+        <div class="row g-3">
+          {% for rb in form.visibility %}
+            <div class="col-12 col-md-4">
+              <label class="option-card" for="{{ rb.id_for_label }}">
+                {{ rb.tag }}
+                <div>
+                  <span class="fw-semibold text-white d-block">{{ rb.choice_label }}</span>
+                  {% if rb.choice_value == 'PUBLIC' %}
+                    <small class="form-help mb-0">Anyone on GT Job Finder can view your profile.</small>
+                  {% elif rb.choice_value == 'RECRUITERS' %}
+                    <small class="form-help mb-0">Only verified recruiters see approved fields.</small>
+                  {% else %}
+                    <small class="form-help mb-0">Only you and admins can access your profile.</small>
+                  {% endif %}
+                </div>
+              </label>
+            </div>
+          {% endfor %}
+        </div>
         {% if form.visibility.errors %}
-          <div class="text-danger small mt-1">{{ form.visibility.errors|striptags }}</div>
+          <div class="text-danger small mt-2">{{ form.visibility.errors|striptags }}</div>
         {% endif %}
+        <p class="form-help mt-3 mb-0">
+          Public profiles show everything you allow. Recruiter-only hides data from candidates. Private hides your profile entirely.
+        </p>
       </div>
 
-      <small class="text-muted d-block mt-2">
-        <strong>Public</strong>: visible to everyone (sensitive fields still hidden unless allowed).<br>
-        <strong>Recruiters only</strong>: only recruiter accounts can view your profile.<br>
-        <strong>Private</strong>: only you and admins can view.
-      </small>
-    </div>
-
-    <!-- Recruiter field toggles -->
-    <div class="card p-3 mb-3">
-      <h6 class="mb-2">What recruiters can see</h6>
-
-      <div class="form-check">
-        {{ form.show_firstName_to_recruiters }}
-        <label class="form-check-label" for="{{ form.show_firstName_to_recruiters.id_for_label }}">
-          {{ form.show_firstName_to_recruiters.label }}
-        </label>
-        {% if form.show_firstName_to_recruiters.errors %}
-          <div class="text-danger small">{{ form.show_firstName_to_recruiters.errors|striptags }}</div>
-        {% endif %}
+      <div class="card p-4 mb-4">
+        <h6 class="section-title">Recruiter access toggles</h6>
+        <div class="row row-cols-1 row-cols-md-2 g-3">
+          <div class="col">
+            <div class="form-check">
+              {{ form.show_firstName_to_recruiters }}
+              <label class="form-check-label" for="{{ form.show_firstName_to_recruiters.id_for_label }}">{{ form.show_firstName_to_recruiters.label }}</label>
+              {% if form.show_firstName_to_recruiters.errors %}
+                <div class="text-danger small mt-1">{{ form.show_firstName_to_recruiters.errors|striptags }}</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col">
+            <div class="form-check">
+              {{ form.show_lastName_to_recruiters }}
+              <label class="form-check-label" for="{{ form.show_lastName_to_recruiters.id_for_label }}">{{ form.show_lastName_to_recruiters.label }}</label>
+              {% if form.show_lastName_to_recruiters.errors %}
+                <div class="text-danger small mt-1">{{ form.show_lastName_to_recruiters.errors|striptags }}</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col">
+            <div class="form-check">
+              {{ form.show_email_to_recruiters }}
+              <label class="form-check-label" for="{{ form.show_email_to_recruiters.id_for_label }}">{{ form.show_email_to_recruiters.label }}</label>
+              {% if form.show_email_to_recruiters.errors %}
+                <div class="text-danger small mt-1">{{ form.show_email_to_recruiters.errors|striptags }}</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col">
+            <div class="form-check">
+              {{ form.show_phone_to_recruiters }}
+              <label class="form-check-label" for="{{ form.show_phone_to_recruiters.id_for_label }}">{{ form.show_phone_to_recruiters.label }}</label>
+              {% if form.show_phone_to_recruiters.errors %}
+                <div class="text-danger small mt-1">{{ form.show_phone_to_recruiters.errors|striptags }}</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col">
+            <div class="form-check">
+              {{ form.show_resume_to_recruiters }}
+              <label class="form-check-label" for="{{ form.show_resume_to_recruiters.id_for_label }}">{{ form.show_resume_to_recruiters.label }}</label>
+              {% if form.show_resume_to_recruiters.errors %}
+                <div class="text-danger small mt-1">{{ form.show_resume_to_recruiters.errors|striptags }}</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col">
+            <div class="form-check">
+              {{ form.show_education_to_recruiters }}
+              <label class="form-check-label" for="{{ form.show_education_to_recruiters.id_for_label }}">{{ form.show_education_to_recruiters.label }}</label>
+              {% if form.show_education_to_recruiters.errors %}
+                <div class="text-danger small mt-1">{{ form.show_education_to_recruiters.errors|striptags }}</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col">
+            <div class="form-check">
+              {{ form.show_experience_to_recruiters }}
+              <label class="form-check-label" for="{{ form.show_experience_to_recruiters.id_for_label }}">{{ form.show_experience_to_recruiters.label }}</label>
+              {% if form.show_experience_to_recruiters.errors %}
+                <div class="text-danger small mt-1">{{ form.show_experience_to_recruiters.errors|striptags }}</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col">
+            <div class="form-check">
+              {{ form.show_location_to_recruiters }}
+              <label class="form-check-label" for="{{ form.show_location_to_recruiters.id_for_label }}">{{ form.show_location_to_recruiters.label }}</label>
+              {% if form.show_location_to_recruiters.errors %}
+                <div class="text-danger small mt-1">{{ form.show_location_to_recruiters.errors|striptags }}</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col">
+            <div class="form-check">
+              {{ form.show_skills_to_recruiters }}
+              <label class="form-check-label" for="{{ form.show_skills_to_recruiters.id_for_label }}">{{ form.show_skills_to_recruiters.label }}</label>
+              {% if form.show_skills_to_recruiters.errors %}
+                <div class="text-danger small mt-1">{{ form.show_skills_to_recruiters.errors|striptags }}</div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col">
+            <div class="form-check">
+              {{ form.show_projects_to_recruiters }}
+              <label class="form-check-label" for="{{ form.show_projects_to_recruiters.id_for_label }}">{{ form.show_projects_to_recruiters.label }}</label>
+              {% if form.show_projects_to_recruiters.errors %}
+                <div class="text-danger small mt-1">{{ form.show_projects_to_recruiters.errors|striptags }}</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="form-check">
-        {{ form.show_lastName_to_recruiters }}
-        <label class="form-check-label" for="{{ form.show_lastName_to_recruiters.id_for_label }}">
-          {{ form.show_lastName_to_recruiters.label }}
-        </label>
-        {% if form.show_lastName_to_recruiters.errors %}
-          <div class="text-danger small">{{ form.show_lastName_to_recruiters.errors|striptags }}</div>
-        {% endif %}
+      <div class="card p-4">
+        <h6 class="section-title">Profile details</h6>
+        <div class="row g-3">
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="{{ form.firstName.id_for_label }}">First name</label>
+            {{ form.firstName }}
+            {% if form.firstName.errors %}
+              <div class="text-danger small mt-1">{{ form.firstName.errors|striptags }}</div>
+            {% endif %}
+            <p class="form-help mb-0">Current: {{ profile.firstName|default:"—" }}</p>
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="{{ form.lastName.id_for_label }}">Last name</label>
+            {{ form.lastName }}
+            {% if form.lastName.errors %}
+              <div class="text-danger small mt-1">{{ form.lastName.errors|striptags }}</div>
+            {% endif %}
+            <p class="form-help mb-0">Current: {{ profile.lastName|default:"—" }}</p>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="{{ form.email.id_for_label }}">Email</label>
+            {{ form.email }}
+            {% if form.email.errors %}
+              <div class="text-danger small mt-1">{{ form.email.errors|striptags }}</div>
+            {% endif %}
+            <p class="form-help mb-0">Current: {{ profile.email|default:"—" }}</p>
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="{{ form.phone.id_for_label }}">Phone</label>
+            {{ form.phone }}
+            {% if form.phone.errors %}
+              <div class="text-danger small mt-1">{{ form.phone.errors|striptags }}</div>
+            {% endif %}
+            <p class="form-help mb-0">Digits only. Current: {{ profile.phone|default:"—" }}</p>
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="{{ form.resume_url.id_for_label }}">Resume link</label>
+            {{ form.resume_url }}
+            {% if form.resume_url.errors %}
+              <div class="text-danger small mt-1">{{ form.resume_url.errors|striptags }}</div>
+            {% endif %}
+            <p class="form-help mb-0">Current: {{ profile.resume_url|default:"—" }}</p>
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="{{ form.education.id_for_label }}">Education</label>
+            {{ form.education }}
+            {% if form.education.errors %}
+              <div class="text-danger small mt-1">{{ form.education.errors|striptags }}</div>
+            {% endif %}
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="{{ form.experience.id_for_label }}">Experience</label>
+            {{ form.experience }}
+            {% if form.experience.errors %}
+              <div class="text-danger small mt-1">{{ form.experience.errors|striptags }}</div>
+            {% endif %}
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="{{ form.location.id_for_label }}">Location</label>
+            {{ form.location }}
+            {% if form.location.errors %}
+              <div class="text-danger small mt-1">{{ form.location.errors|striptags }}</div>
+            {% endif %}
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="{{ form.skills.id_for_label }}">Skills</label>
+            {{ form.skills }}
+            {% if form.skills.errors %}
+              <div class="text-danger small mt-1">{{ form.skills.errors|striptags }}</div>
+            {% endif %}
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="{{ form.projects.id_for_label }}">Projects</label>
+            {{ form.projects }}
+            {% if form.projects.errors %}
+              <div class="text-danger small mt-1">{{ form.projects.errors|striptags }}</div>
+            {% endif %}
+          </div>
+        </div>
       </div>
 
-      <div class="form-check">
-        {{ form.show_email_to_recruiters }}
-        <label class="form-check-label" for="{{ form.show_email_to_recruiters.id_for_label }}">
-          {{ form.show_email_to_recruiters.label }}
-        </label>
-        {% if form.show_email_to_recruiters.errors %}
-          <div class="text-danger small">{{ form.show_email_to_recruiters.errors|striptags }}</div>
-        {% endif %}
+      <div class="text-end mt-4">
+        <button type="submit" class="btn btn-primary px-4">Save changes</button>
       </div>
-
-      <div class="form-check">
-        {{ form.show_phone_to_recruiters }}
-        <label class="form-check-label" for="{{ form.show_phone_to_recruiters.id_for_label }}">
-          {{ form.show_phone_to_recruiters.label }}
-        </label>
-        {% if form.show_phone_to_recruiters.errors %}
-          <div class="text-danger small">{{ form.show_phone_to_recruiters.errors|striptags }}</div>
-        {% endif %}
-      </div>
-
-      <div class="form-check">
-        {{ form.show_resume_to_recruiters }}
-        <label class="form-check-label" for="{{ form.show_resume_to_recruiters.id_for_label }}">
-          {{ form.show_resume_to_recruiters.label }}
-        </label>
-        {% if form.show_resume_to_recruiters.errors %}
-          <div class="text-danger small">{{ form.show_resume_to_recruiters.errors|striptags }}</div>
-        {% endif %}
-      </div>
-
-      <div class="form-check">
-        {{ form.show_education_to_recruiters }}
-        <label class="form-check-label" for="{{ form.show_education_to_recruiters.id_for_label }}">
-          {{ form.show_education_to_recruiters.label }}
-        </label>
-        {% if form.show_education_to_recruiters.errors %}
-          <div class="text-danger small">{{ form.show_education_to_recruiters.errors|striptags }}</div>
-        {% endif %}
-      </div>
-
-      <div class="form-check">
-        {{ form.show_experience_to_recruiters }}
-        <label class="form-check-label" for="{{ form.show_experience_to_recruiters.id_for_label }}">
-          {{ form.show_experience_to_recruiters.label }}
-        </label>
-        {% if form.show_experience_to_recruiters.errors %}
-          <div class="text-danger small">{{ form.show_experience_to_recruiters.errors|striptags }}</div>
-        {% endif %}
-      </div>
-
-      <div class="form-check">
-        {{ form.show_location_to_recruiters }}
-        <label class="form-check-label" for="{{ form.show_location_to_recruiters.id_for_label }}">
-          {{ form.show_location_to_recruiters.label }}
-        </label>
-        {% if form.show_location_to_recruiters.errors %}
-          <div class="text-danger small">{{ form.show_location_to_recruiters.errors|striptags }}</div>
-        {% endif %}
-      </div>
-
-      <div class="form-check">
-        {{ form.show_skills_to_recruiters }}
-        <label class="form-check-label" for="{{ form.show_skills_to_recruiters.id_for_label }}">
-          {{ form.show_skills_to_recruiters.label }}
-        </label>
-        {% if form.show_skills_to_recruiters.errors %}
-          <div class="text-danger small">{{ form.show_skills_to_recruiters.errors|striptags }}</div>
-        {% endif %}
-      </div>
-
-      <div class="form-check">
-        {{ form.show_projects_to_recruiters }}
-        <label class="form-check-label" for="{{ form.show_projects_to_recruiters.id_for_label }}">
-          {{ form.show_projects_to_recruiters.label }}
-        </label>
-        {% if form.show_projects_to_recruiters.errors %}
-          <div class="text-danger small">{{ form.show_projects_to_recruiters.errors|striptags }}</div>
-        {% endif %}
-      </div>
-    </div>
-        <h6>First Name</h6>
-        <p>Current first name: {{ profile.firstName }}</p>
-        <p>Enter new information here: </p>
-        {{ form.firstName }}
-
-        <h6>Last Name</h6>
-        <p>Current last name: {{ profile.lastName }}</p>
-        <p>Enter new information here: </p>
-        {{ form.lastName }}
-
-        <h6>Email</h6>
-        <p>Current Email: {{ profile.email }}</p>
-        <p>Enter new information here: </p>
-        {{ form.email }}
-
-        <h6>Contact</h6>
-        <p>Current phone: {{ profile.phone }}</p>
-        <p>Enter new information here: </p>
-        {{ form.phone }}
-
-        <h6>Education</h6>
-        <p>Current education: {{ profile.education }}</p>
-        <p>Enter new information here: </p>
-        {{ form.education }}
-
-        <h6>Experience</h6>
-        <p>Current experience: {{ profile.experience }}</p>
-        <p>Enter new information here: </p>
-        {{ form.experience }}
-
-        <h6>Resume</h6>
-        <p>Current resume: {{ profile.resume_url }}</p>
-        <p>Enter new information here: </p>
-        {{ form.resume_url }}
-
-        <h6>Location</h6>
-        <p>Current location: {{ profile.location }}</p>
-        <p>Enter new information here: </p>
-        {{ form.location }}
-
-        <h6>Skills</h6>
-        <p>Current skills: {{ profile.skills }}</p>
-        <p>Enter new information here: </p>
-        {{ form.skills }}
-
-        <h6>Projects</h6>
-        <p>Current projects: {{ profile.projects }}</p>
-        <p>Enter new information here: </p>
-        {{ form.projects }}
-    <br>
-
-    
-
-    <button type="submit" class="btn btn-primary">Save</button>
-  </form>
+    </form>
+  </section>
 </div>
 {% endblock %}
