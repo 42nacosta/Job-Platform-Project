@@ -32,11 +32,18 @@ class CustomUserCreationForm(UserCreationForm):
         label="Email Address",
         widget=forms.EmailInput(attrs={'class': 'form-control'})
     )
-    is_recruiter = forms.BooleanField(
-        required=False,
-        label="Are you a recruiter?",
-        help_text=None,
-        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    ROLE_CHOICES = [
+        (False, 'Job Seeker - Looking for opportunities'),
+        (True, 'Recruiter - Posting jobs and hiring'),
+    ]
+
+    is_recruiter = forms.TypedChoiceField(
+        required=True,
+        label="I am a",
+        choices=ROLE_CHOICES,
+        coerce=lambda x: x == 'True',
+        widget=forms.RadioSelect(attrs={'class': 'form-check-input'}),
+        initial=False
     )
 
     class Meta:

@@ -67,6 +67,7 @@ def signup(request):
 
 # accounts/views.py
 from accounts.models import Profile
+from home.recommendations import generate_job_recommendations
 
 @login_required
 def privacy_settings(request):
@@ -76,6 +77,12 @@ def privacy_settings(request):
         if form.is_valid():
             form.save()
             messages.success(request, "Privacy settings updated.")
+
+            # PSEUDOCODE: After profile update, regenerate job recommendations for job seekers
+            # Calls recommendation engine to find matching jobs based on updated skills/location
+            if not profile.is_recruiter:
+                generate_job_recommendations(request.user)
+
             return redirect("accounts:privacy")
     else:
         form = PrivacySettingsForm(instance=profile)

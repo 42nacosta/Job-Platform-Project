@@ -18,11 +18,18 @@
 
                 {% for field in form %}
                   {% if field.name == "is_recruiter" %}
-                    <div class="form-check mb-3">
-                      {{ field }}
-                      <label class="form-check-label" for="{{ field.id_for_label }}">
-                        {{ field.label }}
-                      </label>
+                    <div class="mb-3">
+                      <label class="form-label">{{ field.label }}</label>
+                      <div class="card p-3">
+                        {% for choice in field %}
+                          <div class="form-check mb-2">
+                            {{ choice.tag }}
+                            <label class="form-check-label" for="{{ choice.id_for_label }}">
+                              {{ choice.choice_label }}
+                            </label>
+                          </div>
+                        {% endfor %}
+                      </div>
                       {% if field.errors %}
                         <div class="invalid-feedback d-block">
                           {{ field.errors|striptags }}

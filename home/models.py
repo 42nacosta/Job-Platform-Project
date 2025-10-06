@@ -36,3 +36,51 @@ class Application(models.Model):
 
     def __str__(self):
         return f"{self.applicant.username} -> {self.job.title}"
+
+
+# PSEUDOCODE: CandidateRecommendation links a Job to a candidate Profile with match score
+# Used by recruiters to discover qualified applicants based on skills/location matching
+# Interacts with: Job (the posting), Profile (via user FK), recommendations.py (scoring engine)
+class CandidateRecommendation(models.Model):
+    id = models.AutoField(primary_key=True)
+    job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name="candidate_recommendations")
+    candidate = models.ForeignKey(User, on_delete=models.CASCADE, related_name="recommended_for_jobs")
+    match_score = models.IntegerField(default=0)  # 0-100 score
+    is_dismissed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    viewed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ("job", "candidate")
+        ordering = ["-match_score", "-created_at"]
+        indexes = [
+            models.Index(fields=["job", "-match_score"]),
+            models.Index(fields=["candidate"]),
+        ]
+
+    def __str__(self):
+        return f"{self.candidate.username} recommended for {self.job.title} ({self.match_score}%)"
+
+
+# PSEUDOCODE: JobRecommendation links a candidate Profile to a Job with match score
+# Used by job seekers to discover relevant opportunities based on their skills/location
+# Interacts with: Profile (via user FK), Job (the posting), recommendations.py (scoring engine)
+class JobRecommendation(models.Model):
+    id = models.AutoField(primary_key=True)
+    candidate = models.ForeignKey(User, on_delete=models.CASCADE, related_name="job_recommendations")
+    job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name="recommended_to_candidates")
+    match_score = models.IntegerField(default=0)  # 0-100 score
+    is_dismissed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    viewed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ("candidate", "job")
+        ordering = ["-match_score", "-created_at"]
+        indexes = [
+            models.Index(fields=["candidate", "-match_score"]),
+            models.Index(fields=["job"]),
+        ]
+
+    def __str__(self):
+        return f"{self.job.title} recommended to {self.candidate.username} ({self.match_score}%)"

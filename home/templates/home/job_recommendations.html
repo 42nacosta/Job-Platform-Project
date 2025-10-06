@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+<div class="container" style="max-width: 1040px;">
+  <section class="bubble-card mb-4">
+    <div class="d-flex flex-column flex-lg-row gap-3 align-items-lg-start justify-content-between">
+      <div>
+        <h1 class="h3 mb-1">Recommended Jobs for You</h1>
+        <p class="mb-0 link-muted">Based on your skills and location preferences</p>
+      </div>
+      <a href="{% url 'home.index' %}" class="btn btn-outline-light">Browse All Jobs</a>
+    </div>
+
+    <form method="GET" class="mt-4">
+      <div class="row g-3 align-items-end">
+        <div class="col-12 col-md-4">
+          <label for="min_score" class="form-label mb-1">Minimum Match Score</label>
+          <div class="input-group">
+            <input type="number" class="form-control" id="min_score" name="min_score"
+                   value="{{ min_score }}" min="0" max="100">
+            <button class="btn btn-primary" type="submit">Filter</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <section class="mt-4">
+    {% if recommendations %}
+      <div class="row g-4">
+        {% for rec in recommendations %}
+          <div class="col-12 col-md-6 col-xl-4">
+            <article class="card h-100 p-4 hover-float">
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <h5 class="mb-0">{{ rec.job.title }}</h5>
+                <span class="pill-tag bg-success">{{ rec.match_score }}% match</span>
+              </div>
+
+              {% if rec.job.category %}
+                <span class="pill-tag mb-2">{{ rec.job.category }}</span>
+              {% endif %}
+
+              {% if rec.job.location %}
+                <p class="mb-2 link-muted"><i class="fas fa-map-marker-alt me-1"></i>{{ rec.job.location }}</p>
+              {% endif %}
+
+              <p class="mb-3 text-success fw-semibold">
+                $ {{ rec.job.salary|floatformat:0|intcomma }}
+              </p>
+
+              {% if rec.job.description %}
+                <p class="mb-3 text-wrap" style="font-size: 0.9rem;">
+                  {{ rec.job.description|truncatewords:20 }}
+                </p>
+              {% endif %}
+
+              <div class="d-flex justify-content-between gap-2 mt-auto">
+                <a href="{% url 'home.show' id=rec.job.id %}" class="btn btn-outline-light flex-grow-1">View Details</a>
+                <form method="POST" action="{% url 'home.dismiss_job' rec_id=rec.id %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-outline-danger"
+                          onclick="return confirm('Dismiss this recommendation?')">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </form>
+              </div>
+            </article>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="card p-4">
+        <h5 class="mb-2">No job recommendations found</h5>
+        <p class="mb-0 link-muted">
+          Try lowering the minimum match score or update your profile with more skills and location information
+          in <a href="{% url 'accounts:privacy' %}">Settings</a>.
+        </p>
+      </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock content %}
