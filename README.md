@@ -1,0 +1,1 @@
+A job platform that allows user to view jobs scraped from Linkedin, Indeed, and more. Implements external APIs to visualize an interactive map of jobs around the user, and a critera-based reccomendation system for both recruiters and user. Also has filtering features such as location, salary, job type, etc.
