@@ -33,7 +33,7 @@
   <div class="mt-4" id="apply">
     {% if request.user.is_authenticated %}
 
-      {% if request.user == template_data.job.user %}
+      {% if request.user == template_data.job.user%}
         {% if template_data.applications %}
           <div class="card p-4 mt-3">
             <h5 class="mb-3">Applications ({{ template_data.applications|length }})</h5>
@@ -44,6 +44,7 @@
                     <th>Applicant</th>
                     <th>Note</th>
                     <th>Submitted</th>
+                    <th>Status</th>
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -57,10 +58,15 @@
                       </td>
                       <td style="white-space:pre-wrap">{{ app.note|default:"—" }}</td>
                       <td>{{ app.created_at|date:"Y-m-d H:i" }}</td>
+                      <td>{{ app.status }}</td>
                       <td>
                         <a class="btn btn-sm btn-primary" href="{% url 'messaging:conversation_detail' app.id %}">
                           Message
                         </a>
+                        <form method="POST" action="{% url 'home.move_app' app.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-primary">Move Forward</button>
+                        </form>
                       </td>
                     </tr>
                   {% endfor %}

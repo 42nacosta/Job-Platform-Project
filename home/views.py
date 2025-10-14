@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.views.decorators.http import require_POST
-from .models import Job, CandidateRecommendation, JobRecommendation
+from .models import Job, CandidateRecommendation, JobRecommendation, Application
 from django.contrib.auth.decorators import login_required
 from decimal import Decimal
 from accounts.models import Profile
@@ -315,3 +315,49 @@ def dismiss_job_recommendation(request, rec_id):
     messages.success(request, "Job recommendation dismissed.")
 
     return redirect('home.job_recs')
+
+@login_required
+def view_apps(request):
+
+    return render(request, 'home/apps.html')
+
+@login_required
+def move_app(request, id):
+    print("\n--- move_app called ---")
+    print(f"Request method: {request.method}, User: {request.user}")
+
+    if request.method != "POST":
+        print("Not a POST request!")
+        messages.error(request, "Invalid request method.")
+        return redirect('home:show', id=id)
+
+    app = get_object_or_404(Application, id=id)
+    print(f"Application found: id={app.id}, current status='{app.status}'")
+
+    # Authorization check: only the job owner can move application
+    if request.user != app.job.user:
+        print(f"User not authorized: app.job.user={app.job.user}")
+        messages.error(request, "Not authorized.")
+        return redirect('home:show', id=app.job.id)
+
+    # Define allowed transitions
+    transitions = {
+        app.Status.SUBMITTED: app.Status.REVIEW,
+        app.Status.REVIEW: app.Status.INTERVIEW,
+        app.Status.INTERVIEW: app.Status.OFFER,
+    }
+
+    new_status = transitions.get(app.status)
+    print(f"New status determined: {new_status}")
+
+    if new_status:
+        app.status = new_status
+        app.save()
+        print(f"Application status updated to: {app.status}")
+        messages.success(request, f"Application moved to {app.status}.")
+    else:
+        print("No valid transition found; status not updated.")
+        messages.info(request, "Cannot move application further.")
+
+    print("--- move_app finished ---\n")
+    return redirect('home.show', id=app.job.id)

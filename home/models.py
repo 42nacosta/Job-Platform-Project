@@ -20,6 +20,9 @@ class Job(models.Model):
 class Application(models.Model):
     class Status(models.TextChoices):
         SUBMITTED = "SUBMITTED", "Submitted"
+        REVIEW = "REVIEW", 'Review'
+        INTERVIEW = "INTERVIEW", 'Interview'
+        OFFER = "OFFER", 'Offer'
         WITHDRAWN = "WITHDRAWN", "Withdrawn"
 
     id = models.AutoField(primary_key=True)
