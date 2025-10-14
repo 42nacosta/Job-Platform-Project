@@ -1,6 +1,38 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container mt-4" style="max-width: 1200px;">
-    
+        {% if template_data.applications %}
+          <div class="card p-4 mt-3">
+            <h5 class="mb-3">Applications ({{ template_data.applications|length }})</h5>
+            <div class="table-responsive">
+              <table class="table table-sm align-middle">
+                <thead>
+                  <tr>
+                    <th>Applicant</th>
+                    <th>Note</th>
+                    <th>Submitted</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for app in template_data.applications %}
+                    <tr>
+                      <td>
+                        <a href="{% url 'accounts:profile_detail' username=app.applicant.username %}" class="text-decoration-none">
+                          {{ app.applicant.username }}
+                        </a>
+                      </td>
+                      <td style="white-space:pre-wrap">{{ app.note|default:"—" }}</td>
+                      <td>{{ app.created_at|date:"Y-m-d H:i" }}</td>
+                      <td>{{ app.status }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        {% else %}
+          <div class="alert alert-info mt-3 mb-0">No applications yet.</div>
+        {% endif %}
 </div>
 {% endblock %}

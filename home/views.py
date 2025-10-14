@@ -16,6 +16,7 @@ def index(request):
     max_salary = request.GET.get('max_salary')
 
     jobs = Job.objects.all()
+    app = Application.objects.all()
 
     if search_term:
         if search_type in {'title', 'location', 'category'}:
@@ -35,11 +36,19 @@ def index(request):
         'search_type': search_type or 'title',
         'min_salary': min_salary or '',
         'max_salary': max_salary or '',
+        'applications': app
     }
     return render(request, 'home/index.html', {'template_data': template_data})
 
 def about(request):
     return render(request, 'home/about.html')
+
+@login_required
+def apps(request):
+    template_data = {}
+    template_data['applications'] = Application.objects.all()
+    
+    return render(request, 'home/apps.html', {'template_data': template_data})
 
 def show(request, id):
     job = Job.objects.get(id=id)
@@ -315,11 +324,6 @@ def dismiss_job_recommendation(request, rec_id):
     messages.success(request, "Job recommendation dismissed.")
 
     return redirect('home.job_recs')
-
-@login_required
-def view_apps(request):
-
-    return render(request, 'home/apps.html')
 
 @login_required
 def move_app(request, id):
