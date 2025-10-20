@@ -10,6 +10,10 @@ urlpatterns = [
     path('create/', views.create_job, name='home.create'),
     path('<int:id>/edit/', views.edit_job, name='home.edit'),
     path("candidates/", views.candidates, name="home.candidates"),
+    # Pipeline URLs
+    path("recruiting/pipeline/", views.pipeline_board, name="pipeline-board"),
+    path("recruiting/pipeline/<int:job_id>/", views.pipeline_board, name="pipeline-board-job"),
+    path("recruiting/pipeline/update/", views.pipeline_update_status, name="pipeline-update"),
     # Recommendation URLs
     path('jobs/<int:job_id>/recommended-candidates/', views.recruiter_recommendations, name='home.recruiter_recs'),
     path('recommendations/candidates/<int:rec_id>/dismiss/', views.dismiss_candidate_recommendation, name='home.dismiss_candidate'),

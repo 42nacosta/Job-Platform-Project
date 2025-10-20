@@ -19,17 +19,19 @@ class Job(models.Model):
 
 class Application(models.Model):
     class Status(models.TextChoices):
-        SUBMITTED = "SUBMITTED", "Submitted"
-        REVIEW = "REVIEW", 'Review'
-        INTERVIEW = "INTERVIEW", 'Interview'
-        OFFER = "OFFER", 'Offer'
-        WITHDRAWN = "WITHDRAWN", "Withdrawn"
+        SUBMITTED   = "SUBMITTED", "Submitted"
+        SCREENING   = "SCREENING", "Screening"
+        INTERVIEW   = "INTERVIEW", "Interview"
+        OFFER       = "OFFER",     "Offer"
+        HIRED       = "HIRED",     "Hired"
+        REJECTED    = "REJECTED",  "Rejected"
+        WITHDRAWN   = "WITHDRAWN", "Withdrawn"
 
     id = models.AutoField(primary_key=True)
     job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name="applications")
     applicant = models.ForeignKey(User, on_delete=models.CASCADE, related_name="applications")
     note = models.TextField(max_length=500, blank=True, default="")
-    status = models.CharField(max_length=16, choices=Status.choices, default=Status.SUBMITTED)
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.SUBMITTED, db_index=True,)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

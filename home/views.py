@@ -7,6 +7,8 @@ from decimal import Decimal
 from accounts.models import Profile
 from .recommendations import generate_candidate_recommendations, generate_job_recommendations
 from django.db import models
+from django.http import JsonResponse, HttpResponseForbidden, Http404
+from django.db.models import Prefetch
 
 # Create your views here.
 def index(request):
@@ -365,3 +367,72 @@ def move_app(request, id):
 
     print("--- move_app finished ---\n")
     return redirect('home.show', id=app.job.id)
+
+PIPELINE_COLUMNS = [
+    ("SUBMITTED",  "Submitted"),
+    ("SCREENING",  "Screening"),
+    ("INTERVIEW",  "Interview"),
+    ("OFFER",      "Offer"),
+    ("HIRED",      "Hired"),
+    ("REJECTED",   "Rejected"),
+    ("WITHDRAWN",  "Withdrawn"),
+]
+
+def _user_can_manage_job(user, job: Job|None):
+    if not user.is_authenticated:
+        return False
+    if user.is_staff:
+        return True
+    if job is None:
+        return user.is_staff
+    return job.user_id == user.id
+
+@login_required
+def pipeline_board(request, job_id=None):
+    job = None
+    if job_id:
+        job = get_object_or_404(Job.objects.select_related("user"), pk=job_id)
+        if not _user_can_manage_job(request.user, job):
+            return HttpResponseForbidden("You don't have access to this job.")
+
+    qs = Application.objects.select_related("job", "applicant")
+    if job:
+        qs = qs.filter(job=job)
+    elif not request.user.is_staff:
+        qs = qs.filter(job__user=request.user)
+
+    columns = []
+    for value, label in PIPELINE_COLUMNS:
+        items = [a for a in qs if a.status == value]
+        columns.append({"value": value, "label": label, "items": items})
+
+    ctx = {
+        "columns": columns,
+        "job": job,
+        "pipeline_choices": PIPELINE_COLUMNS,
+    }
+    return render(request, "home/pipeline_board.html", ctx)
+
+@login_required
+def pipeline_update_status(request):
+    if request.method != "POST":
+        return JsonResponse({"ok": False, "error": "POST required"}, status=405)
+
+    app_id = request.POST.get("application_id")
+    new_status = request.POST.get("new_status")
+
+    if not app_id or not new_status:
+        return JsonResponse({"ok": False, "error": "Missing parameters"}, status=400)
+
+    app = get_object_or_404(Application.objects.select_related("job", "job__user"), pk=app_id)
+
+    if not _user_can_manage_job(request.user, app.job):
+        return JsonResponse({"ok": False, "error": "Forbidden"}, status=403)
+
+    valid = dict(Application.Status.choices).keys()
+    if new_status not in valid:
+        return JsonResponse({"ok": False, "error": "Invalid status"}, status=400)
+
+    app.status = new_status
+    app.save(update_fields=["status"])
+    return JsonResponse({"ok": True, "id": app.id, "status": app.status})

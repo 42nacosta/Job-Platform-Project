@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container mt-4" style="max-width: 1400px;">
+  <section class="d-flex align-items-baseline justify-content-between mb-3">
+    <div>
+      <h1 class="h3 mb-1">Applicant Pipeline{% if job %} — {{ job.title }}{% endif %}</h1>
+      <p class="text-muted mb-0">Drag applicants between stages to update their status.</p>
+    </div>
+    {% if job %}
+      <a class="btn btn-outline-secondary btn-sm" href="{% url 'pipeline-board' %}">View all jobs</a>
+    {% endif %}
+  </section>
+
+  <div id="kanban" class="row g-3">
+    {% for col in columns %}
+      <div class="col-12 col-md-6 col-lg-3">
+        <div class="card shadow-sm h-100">
+          <div class="card-header fw-semibold">{{ col.label }}</div>
+          <div class="card-body p-2">
+            <div class="kanban-column list-group min-vh-25"
+                 data-status="{{ col.value }}">
+              {% for a in col.items %}
+                <div class="list-group-item mb-2 draggable"
+                     data-app-id="{{ a.id }}"
+                     style="cursor: grab;">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <div class="fw-semibold">
+                        {{ a.applicant.get_full_name|default:a.applicant.username }}
+                      </div>
+                      <div class="small text-muted">
+                        for {{ a.job.title }}
+                      </div>
+                    </div>
+                    <span class="badge bg-light text-dark border">{{ a.status }}</span>
+                  </div>
+                  {% if a.applicant.email %}
+                    <div class="small mt-1">
+                      <i class="bi bi-envelope"></i> {{ a.applicant.email }}
+                    </div>
+                  {% endif %}
+                </div>
+                {% empty %}
+                    <div style="min-height: 1rem;"></div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script>
+(function() {
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
+  const csrftoken = getCookie('csrftoken');
+
+  const columns = document.querySelectorAll('.kanban-column');
+  columns.forEach(col => {
+    new Sortable(col, {
+      group: 'pipeline',
+      animation: 150,
+      ghostClass: 'bg-light',
+      onAdd: function (evt) {
+        const item = evt.item;
+        const applicationId = item.getAttribute('data-app-id');
+        const newStatus = evt.to.getAttribute('data-status');
+
+        fetch("{% url 'pipeline-update' %}", {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": csrftoken
+          },
+          body: new URLSearchParams({
+            application_id: applicationId,
+            new_status: newStatus
+          })
+        }).then(r => r.json())
+         .then(data => {
+            if (!data.ok) {
+              alert(data.error || "Failed to update status");
+              evt.from.insertBefore(item, evt.from.children[evt.oldIndex] || null);
+            } else {
+              const badge = item.querySelector('.badge');
+              if (badge) badge.textContent = newStatus;
+            }
+         })
+         .catch(() => {
+            alert("Network error");
+            evt.from.insertBefore(item, evt.from.children[evt.oldIndex] || null);
+         });
+      }
+    });
+  });
+})();
+</script>
+{% endblock %}
