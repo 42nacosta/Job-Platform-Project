@@ -44,6 +44,9 @@ class Profile(models.Model):
     firstName = models.CharField(max_length=30, blank=True, null=True)
     lastName = models.CharField(max_length=30, blank=True, null=True)
 
+    #users last action
+    last_active = models.DateTimeField(null=True, blank=True)
+
     def __str__(self):
         return f"{self.user.username} - {'Recruiter' if self.is_recruiter else 'Candidate'}"
 
@@ -91,3 +94,11 @@ def create_profile(sender, instance, created, **kwargs):
 def save_profile(sender, instance, **kwargs):
     # Ensures profile exists even if superuser created via shell
     Profile.objects.get_or_create(user=instance)
+
+class UserActivity(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    action = models.CharField(max_length=255)
+    timestamp = models.DateTimeField(auto_now_add=True)  # ✅ created automatically when saved
+
+    def __str__(self):
+        return f"{self.user.username} - {self.action} ({self.timestamp:%Y-%m-%d %H:%M:%S})"
