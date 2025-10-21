@@ -32,6 +32,7 @@
             {% endif %}
             {% if request.user.is_authenticated and request.user.profile.is_recruiter%}
               <a class="nav-link" href="{% url 'home.candidates' %}">Candidates</a>
+              <a class="nav-link" href="{% url 'pipeline-board' %}">Pipeline</a>
             {% endif %}
             {% if request.user.is_authenticated and not request.user.profile.is_recruiter %}
               <a class="nav-link" href="{% url 'home.job_recs' %}">Recommended Jobs</a>
