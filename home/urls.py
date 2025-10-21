@@ -19,4 +19,11 @@ urlpatterns = [
     path('recommendations/candidates/<int:rec_id>/dismiss/', views.dismiss_candidate_recommendation, name='home.dismiss_candidate'),
     path('recommended-jobs/', views.job_recommendations, name='home.job_recs'),
     path('recommendations/jobs/<int:rec_id>/dismiss/', views.dismiss_job_recommendation, name='home.dismiss_job'),
+    # Saved Search URLs
+    path("saved-searches/", views.saved_search_list, name="saved_search_list"),
+    path("saved-searches/new", views.saved_search_create, name="saved_search_create"),
+    path("saved-searches/<int:pk>/toggle", views.saved_search_toggle, name="saved_search_toggle"),
+    path("saved-searches/<int:pk>/matches", views.saved_search_matches, name="saved_search_matches"),
+    path("notifications/unread-count", views.saved_search_unread_count, name="saved_search_unread_count"),
+    path("notifications/mark-seen", views.saved_search_mark_seen, name="saved_search_mark_seen"),
 ]

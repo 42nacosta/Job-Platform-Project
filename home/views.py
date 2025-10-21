@@ -9,6 +9,9 @@ from .recommendations import generate_candidate_recommendations, generate_job_re
 from django.db import models
 from django.http import JsonResponse, HttpResponseForbidden, Http404
 from django.db.models import Prefetch
+from home.forms import SavedCandidateSearchForm
+from home.models import SavedCandidateSearch, SavedCandidateMatch
+from home.services.saved_searches import run_search_and_record_new_matches
 
 # Create your views here.
 def index(request):
@@ -436,3 +439,77 @@ def pipeline_update_status(request):
     app.status = new_status
     app.save(update_fields=["status"])
     return JsonResponse({"ok": True, "id": app.id, "status": app.status})
+
+# Saved search implementation
+
+def _must_be_recruiter(user):
+    try:
+        return user.is_authenticated and user.profile.is_recruiter
+    except Exception:
+        return False
+
+@login_required
+def saved_search_list(request):
+    if not _must_be_recruiter(request.user):
+        return HttpResponseForbidden("Recruiters only")
+    searches = SavedCandidateSearch.objects.filter(owner=request.user).order_by("-updated_at")
+    return render(request, "home/saved_search_list.html", {"searches": searches})
+
+@login_required
+def saved_search_create(request):
+    if not _must_be_recruiter(request.user):
+        return HttpResponseForbidden("Recruiters only")
+    if request.method == "POST":
+        form = SavedCandidateSearchForm(request.POST)
+        if form.is_valid():
+            s = form.save(commit=False)
+            s.owner = request.user
+            s.save()
+            # initial run so the list isn't empty
+            run_search_and_record_new_matches(s)
+            return redirect("saved_search_list")
+    else:
+        # Optionally prefill from current query string on the candidates search page
+        initial = {
+            "keywords": request.GET.get("keywords", ""),
+            "location": request.GET.get("location", ""),
+            "min_years_experience": request.GET.get("min_years_experience", 0),
+        }
+        form = SavedCandidateSearchForm(initial=initial)
+    return render(request, "home/saved_search_create.html", {"form": form})
+
+@login_required
+def saved_search_toggle(request, pk):
+    if not _must_be_recruiter(request.user):
+        return HttpResponseForbidden("Recruiters only")
+    s = get_object_or_404(SavedCandidateSearch, pk=pk, owner=request.user)
+    s.is_active = not s.is_active
+    s.save(update_fields=["is_active"])
+    return redirect("saved_search_list")
+
+@login_required
+def saved_search_matches(request, pk):
+    if not _must_be_recruiter(request.user):
+        return HttpResponseForbidden("Recruiters only")
+    s = get_object_or_404(SavedCandidateSearch, pk=pk, owner=request.user)
+    matches = (
+        SavedCandidateMatch.objects
+        .filter(search=s)
+        .select_related("candidate", "candidate__profile")
+        .order_by("-matched_at")
+    )
+    return render(request, "home/saved_search_matches.html", {"search": s, "matches": matches})
+
+@login_required
+def saved_search_unread_count(request):
+    if not _must_be_recruiter(request.user):
+        return JsonResponse({"count": 0})
+    count = SavedCandidateMatch.objects.filter(search__owner=request.user, seen=False).count()
+    return JsonResponse({"count": count})
+
+@login_required
+def saved_search_mark_seen(request):
+    if not _must_be_recruiter(request.user):
+        return JsonResponse({"ok": False})
+    SavedCandidateMatch.objects.filter(search__owner=request.user, seen=False).update(seen=True)
+    return JsonResponse({"ok": True})

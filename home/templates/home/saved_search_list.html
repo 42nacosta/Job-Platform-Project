@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Saved candidate searches</h2>
+<a class="btn btn-primary" href="{% url 'saved_search_create' %}">New search</a>
+<ul class="list-group mt-3">
+  {% for s in searches %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      <div>
+        <strong>{{ s.name }}</strong>
+        <div class="text-muted small">
+          {% if s.keywords %}keywords: <code>{{ s.keywords }}</code>{% endif %}
+          {% if s.location %} · location: <code>{{ s.location }}</code>{% endif %}
+          {% if s.min_years_experience %} · min exp: {{ s.min_years_experience }}y{% endif %}
+          {% if not s.is_active %} · <span class="badge text-bg-secondary">paused</span>{% endif %}
+        </div>
+      </div>
+      <div>
+        <a class="btn btn-sm btn-outline-primary" href="{% url 'saved_search_matches' s.pk %}">Matches</a>
+        <a class="btn btn-sm btn-outline-secondary" href="{% url 'saved_search_toggle' s.pk %}">
+          {% if s.is_active %}Pause{% else %}Resume{% endif %}
+        </a>
+      </div>
+    </li>
+  {% empty %}
+    <li class="list-group-item">No saved searches yet.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

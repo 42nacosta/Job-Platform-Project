@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Matches for "{{ search.name }}"</h2>
+<ul class="list-group">
+  {% for m in matches %}
+    <li class="list-group-item">
+      <strong>{{ m.candidate.profile.headline|default:m.candidate.username }}</strong>
+      <div class="text-muted small">
+        {{ m.candidate.profile.location }} · matched {{ m.matched_at|timesince }} ago
+      </div>
+      <div>{{ m.candidate.profile.skills|default:"" }}</div>
+      <a class="btn btn-sm btn-outline-primary mt-2"
+        href="{% url 'accounts:profile_detail' m.candidate.username %}">
+        View profile</a>
+
+  {% empty %}
+    <li class="list-group-item">No matches (yet).</li>
+  {% endfor %}
+</ul>
+{% endblock %}

@@ -89,3 +89,42 @@ class JobRecommendation(models.Model):
 
     def __str__(self):
         return f"{self.job.title} recommended to {self.candidate.username} ({self.match_score}%)"
+
+class SavedCandidateSearch(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="saved_candidate_searches")
+    name = models.CharField(max_length=120)
+    keywords = models.CharField(max_length=255, blank=True, help_text="Search text across headline/skills/projects")
+    location = models.CharField(max_length=255, blank=True)
+    min_years_experience = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    last_run_at = models.DateTimeField(null=True, blank=True)
+    last_notified_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-updated_at"]
+        indexes = [
+            models.Index(fields=["owner", "is_active"]),
+        ]
+
+    def __str__(self):
+        return f"{self.name} ({self.owner.username})"
+
+
+class SavedCandidateMatch(models.Model):
+    search = models.ForeignKey(SavedCandidateSearch, on_delete=models.CASCADE, related_name="matches")
+    candidate = models.ForeignKey(User, on_delete=models.CASCADE, related_name="saved_search_hits")
+    matched_at = models.DateTimeField(auto_now_add=True)
+    seen = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ("search", "candidate")
+        ordering = ["-matched_at"]
+        indexes = [
+            models.Index(fields=["search", "seen", "-matched_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.search.name} -> {self.candidate.username}"
