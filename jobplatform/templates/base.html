@@ -33,6 +33,12 @@
             {% if request.user.is_authenticated and request.user.profile.is_recruiter%}
               <a class="nav-link" href="{% url 'home.candidates' %}">Candidates</a>
               <a class="nav-link" href="{% url 'pipeline-board' %}">Pipeline</a>
+              <a class="nav-link position-relative" href="{% url 'saved_search_list' %}">
+                <i class="fa-solid fa-bell"></i> Saved Searches
+                <span id="notifBadge" 
+                      class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
+                      style="font-size: 0.65rem; display: none;">0</span>
+              </a>
             {% endif %}
             {% if request.user.is_authenticated and not request.user.profile.is_recruiter %}
               <a class="nav-link" href="{% url 'home.job_recs' %}">Recommended Jobs</a>
@@ -63,6 +69,33 @@
       {% block content %}
       {% endblock content %}
     </main>
-    
+    <script>
+      async function refreshSavedSearchBadge(){
+        try {
+          const res = await fetch("{% url 'saved_search_unread_count' %}", {
+            credentials: "same-origin"
+          });
+          const data = await res.json();
+          const el = document.getElementById("notifBadge");
+          if (!el) return;
+
+          if (data.count > 0) {
+            el.textContent = data.count;
+            el.style.display = "";
+          } else {
+            el.style.display = "none";
+          }
+        } catch(e) {
+          console.error("Badge refresh failed", e);
+        }
+      }
+
+      refreshSavedSearchBadge();
+      setInterval(refreshSavedSearchBadge, 15000);
+
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) refreshSavedSearchBadge();
+      });
+    </script>
 </body>
 </html>
