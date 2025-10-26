@@ -237,8 +237,8 @@ def recruiter_recommendations(request, job_id):
     if job.user != request.user:
         return render(request, 'home/forbidden.html', status=403)
 
-    # Get min score filter (default: 15)
-    min_score = int(request.GET.get('min_score', 15))
+    # Get min score filter (default: 10)
+    min_score = int(request.GET.get('min_score', 10))
 
     # Fetch recommendations, exclude dismissed ones
     recommendations = (
@@ -298,8 +298,8 @@ def dismiss_candidate_recommendation(request, rec_id):
 # Interacts with: JobRecommendation model, Job model for posting data
 @login_required
 def job_recommendations(request):
-    # Get min score filter (default: 15)
-    min_score = int(request.GET.get('min_score', 15))
+    # Get min score filter (default: 10)
+    min_score = int(request.GET.get('min_score', 10))
 
     # Fetch recommendations, exclude dismissed ones
     recommendations = (

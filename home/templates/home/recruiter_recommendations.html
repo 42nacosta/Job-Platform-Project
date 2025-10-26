@@ -14,13 +14,21 @@
 
     <form method="GET" class="mt-4">
       <div class="row g-3 align-items-end">
-        <div class="col-12 col-md-4">
-          <label for="min_score" class="form-label mb-1">Minimum Match Score</label>
-          <div class="input-group">
-            <input type="number" class="form-control" id="min_score" name="min_score"
-                   value="{{ min_score }}" min="0" max="100">
-            <button class="btn btn-primary" type="submit">Filter</button>
+        <div class="col-12 col-md-6">
+          <label for="min_score" class="form-label mb-1">
+            Minimum Match Score: <strong id="score-value">{{ min_score }}%</strong>
+          </label>
+          <input type="range" class="form-range" id="min_score" name="min_score"
+                 value="{{ min_score }}" min="0" max="100" step="5"
+                 oninput="document.getElementById('score-value').textContent = this.value + '%'">
+          <div class="d-flex justify-content-between small text-muted mt-1">
+            <span>0%</span>
+            <span>50%</span>
+            <span>100%</span>
           </div>
+        </div>
+        <div class="col-12 col-md-3">
+          <button class="btn btn-primary w-100" type="submit">Apply Filter</button>
         </div>
       </div>
     </form>

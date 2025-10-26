@@ -7,27 +7,36 @@ from .models import Job, CandidateRecommendation, JobRecommendation
 from accounts.models import Profile
 
 
-# PSEUDOCODE: Tokenizes and compares skill strings using improved matching
-# Takes two skill text strings, lowercases, splits by common delimiters
-# Returns 0-100 match score based on how many candidate skills match job requirements
+# PSEUDOCODE: Improved skill matching using multiple signals
+# Analyzes profile skills/experience/education against job requirements
+# Returns 0-100 match score with emphasis on relevant keyword overlap
 def calculate_skill_match(profile_skills, job_description):
     """
     Calculate skill match score between profile and job.
+    Uses multiple scoring methods and takes the best result.
     Returns integer 0-100 representing percentage match.
     """
     if not profile_skills or not job_description:
         return 0
 
     # Normalize and tokenize
-    profile_tokens = set(profile_skills.lower().replace(',', ' ').replace(';', ' ').split())
-    job_tokens = set(job_description.lower().replace(',', ' ').replace(';', ' ').split())
+    profile_text = profile_skills.lower().replace(',', ' ').replace(';', ' ').replace('-', ' ')
+    job_text = job_description.lower().replace(',', ' ').replace(';', ' ').replace('-', ' ')
+    
+    profile_tokens = set(profile_text.split())
+    job_tokens = set(job_text.split())
 
-    # Remove common words that don't indicate skills
+    # Expanded stop words list - common words that don't indicate skills/fit
     stop_words = {
         'and', 'or', 'the', 'a', 'an', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
         'we', 'are', 'is', 'you', 'will', 'be', 'our', 'your', 'this', 'that', 'as', 'it',
-        'from', 'has', 'have', 'can', 'all', 'about', 'their', 'use', 'work', 'also', 'who'
+        'from', 'has', 'have', 'can', 'all', 'about', 'their', 'use', 'work', 'also', 'who',
+        'but', 'not', 'they', 'which', 'been', 'were', 'would', 'should', 'could', 'may',
+        'into', 'through', 'during', 'before', 'after', 'above', 'below', 'up', 'down',
+        'out', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there',
+        'when', 'where', 'why', 'how', 'than', 'too', 'very', 'such', 'these', 'those'
     }
+    
     profile_tokens = profile_tokens - stop_words
     job_tokens = job_tokens - stop_words
 
@@ -36,16 +45,30 @@ def calculate_skill_match(profile_skills, job_description):
 
     # Calculate matching tokens
     matching_tokens = profile_tokens & job_tokens
+    match_count = len(matching_tokens)
     
-    # Score based on what percentage of candidate's skills match the job
-    # AND what percentage of the job requirements are covered
-    candidate_coverage = len(matching_tokens) / len(profile_tokens) if profile_tokens else 0
-    job_coverage = len(matching_tokens) / len(job_tokens) if job_tokens else 0
+    # METHOD 1: Keyword density approach
+    # Focus on what percentage of meaningful job keywords the candidate has
+    keyword_score = (match_count / len(job_tokens)) * 100 if job_tokens else 0
     
-    # Weighted average: 70% based on candidate having relevant skills, 30% job coverage
-    score = (candidate_coverage * 0.7 + job_coverage * 0.3) * 100
+    # METHOD 2: Candidate relevance approach  
+    # What percentage of candidate's skills are relevant to this job
+    relevance_score = (match_count / len(profile_tokens)) * 100 if profile_tokens else 0
     
-    return min(int(score), 100)
+    # METHOD 3: Balanced Jaccard-like approach
+    # Overall overlap considering both sides
+    union_size = len(profile_tokens | job_tokens)
+    jaccard_score = (match_count / union_size) * 100 if union_size else 0
+    
+    # Boost score if there are many matching keywords (shows strong fit)
+    match_bonus = min(match_count * 3, 30)  # Up to 30 point bonus for lots of matches
+    
+    # Take weighted combination favoring keyword coverage
+    # This makes candidates with relevant skills score higher
+    base_score = (keyword_score * 0.5 + relevance_score * 0.3 + jaccard_score * 0.2)
+    final_score = min(base_score + match_bonus, 100)
+    
+    return int(final_score)
 
 
 # PSEUDOCODE: Compares location strings with exact/partial/no match scoring
@@ -102,26 +125,37 @@ def generate_candidate_recommendations(job_id):
         if job.applications.filter(applicant=profile.user).exists():
             continue
 
+        # Build comprehensive profile text from multiple fields
+        profile_text_parts = []
+        if profile.skills:
+            profile_text_parts.append(profile.skills)
+        if profile.experience:
+            profile_text_parts.append(profile.experience)
+        if profile.education:
+            profile_text_parts.append(profile.education)
+        
+        profile_text = " ".join(profile_text_parts)
+        
         # Calculate match scores
         skill_score = calculate_skill_match(
-            profile.skills or "",
+            profile_text,
             job.description + " " + job.title + " " + job.category
         )
         location_score = calculate_location_match(profile.location or "", job.location)
 
-        # Weighted composite score: 70% skills, 30% location
-        composite_score = int((skill_score * 0.7) + (location_score * 0.3))
+        # Weighted composite score: 75% skills/experience/education, 25% location
+        composite_score = int((skill_score * 0.75) + (location_score * 0.25))
 
-        # Only save recommendations with meaningful match scores
-        if composite_score > 15:
+        # Lower threshold to show more opportunities (was 15)
+        if composite_score > 10:
             recommendations.append({
                 'candidate': profile.user,
                 'score': composite_score
             })
 
-    # Sort by score and take top 10
+    # Sort by score and take top 15 (increased from 10)
     recommendations.sort(key=lambda x: x['score'], reverse=True)
-    top_recommendations = recommendations[:10]
+    top_recommendations = recommendations[:15]
 
     # Create or update recommendation records
     for rec in top_recommendations:
@@ -162,27 +196,38 @@ def generate_job_recommendations(user):
 
     recommendations = []
 
+    # Build comprehensive profile text from multiple fields
+    profile_text_parts = []
+    if profile.skills:
+        profile_text_parts.append(profile.skills)
+    if profile.experience:
+        profile_text_parts.append(profile.experience)
+    if profile.education:
+        profile_text_parts.append(profile.education)
+    
+    profile_text = " ".join(profile_text_parts)
+
     for job in jobs:
         # Calculate match scores
         skill_score = calculate_skill_match(
-            profile.skills or "",
+            profile_text,
             job.description + " " + job.title + " " + job.category
         )
         location_score = calculate_location_match(profile.location or "", job.location)
 
-        # Weighted composite score: 70% skills, 30% location
-        composite_score = int((skill_score * 0.7) + (location_score * 0.3))
+        # Weighted composite score: 75% skills/experience/education, 25% location
+        composite_score = int((skill_score * 0.75) + (location_score * 0.25))
 
-        # Only save recommendations with meaningful match scores
-        if composite_score > 15:
+        # Lower threshold to show more opportunities (was 15)
+        if composite_score > 10:
             recommendations.append({
                 'job': job,
                 'score': composite_score
             })
 
-    # Sort by score and take top 10
+    # Sort by score and take top 15 (increased from 10)
     recommendations.sort(key=lambda x: x['score'], reverse=True)
-    top_recommendations = recommendations[:10]
+    top_recommendations = recommendations[:15]
 
     # Create or update recommendation records
     for rec in top_recommendations:
