@@ -100,6 +100,10 @@ def edit_job(request, id):
         job.salary = Decimal(request.POST.get("salary")) or 0
         job.category = request.POST.get('category','').strip()
         job.save()
+        
+        # Regenerate candidate recommendations after job update
+        generate_candidate_recommendations(job.id)
+        
         return redirect('home.show', id=job.id)
     return render(request, 'home/job_form.html', {'template_data': {'title': 'Edit Job'}, 'job': job})
 
@@ -233,8 +237,8 @@ def recruiter_recommendations(request, job_id):
     if job.user != request.user:
         return render(request, 'home/forbidden.html', status=403)
 
-    # Get min score filter (default: 20)
-    min_score = int(request.GET.get('min_score', 20))
+    # Get min score filter (default: 15)
+    min_score = int(request.GET.get('min_score', 15))
 
     # Fetch recommendations, exclude dismissed ones
     recommendations = (
@@ -294,8 +298,8 @@ def dismiss_candidate_recommendation(request, rec_id):
 # Interacts with: JobRecommendation model, Job model for posting data
 @login_required
 def job_recommendations(request):
-    # Get min score filter (default: 20)
-    min_score = int(request.GET.get('min_score', 20))
+    # Get min score filter (default: 15)
+    min_score = int(request.GET.get('min_score', 15))
 
     # Fetch recommendations, exclude dismissed ones
     recommendations = (

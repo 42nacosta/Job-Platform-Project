@@ -7,9 +7,9 @@ from .models import Job, CandidateRecommendation, JobRecommendation
 from accounts.models import Profile
 
 
-# PSEUDOCODE: Tokenizes and compares skill strings using Jaccard similarity
+# PSEUDOCODE: Tokenizes and compares skill strings using improved matching
 # Takes two skill text strings, lowercases, splits by common delimiters
-# Returns 0-100 match score based on set intersection/union
+# Returns 0-100 match score based on how many candidate skills match job requirements
 def calculate_skill_match(profile_skills, job_description):
     """
     Calculate skill match score between profile and job.
@@ -23,21 +23,29 @@ def calculate_skill_match(profile_skills, job_description):
     job_tokens = set(job_description.lower().replace(',', ' ').replace(';', ' ').split())
 
     # Remove common words that don't indicate skills
-    stop_words = {'and', 'or', 'the', 'a', 'an', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'}
+    stop_words = {
+        'and', 'or', 'the', 'a', 'an', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
+        'we', 'are', 'is', 'you', 'will', 'be', 'our', 'your', 'this', 'that', 'as', 'it',
+        'from', 'has', 'have', 'can', 'all', 'about', 'their', 'use', 'work', 'also', 'who'
+    }
     profile_tokens = profile_tokens - stop_words
     job_tokens = job_tokens - stop_words
 
     if not profile_tokens or not job_tokens:
         return 0
 
-    # Jaccard similarity: intersection / union
-    intersection = len(profile_tokens & job_tokens)
-    union = len(profile_tokens | job_tokens)
-
-    if union == 0:
-        return 0
-
-    return int((intersection / union) * 100)
+    # Calculate matching tokens
+    matching_tokens = profile_tokens & job_tokens
+    
+    # Score based on what percentage of candidate's skills match the job
+    # AND what percentage of the job requirements are covered
+    candidate_coverage = len(matching_tokens) / len(profile_tokens) if profile_tokens else 0
+    job_coverage = len(matching_tokens) / len(job_tokens) if job_tokens else 0
+    
+    # Weighted average: 70% based on candidate having relevant skills, 30% job coverage
+    score = (candidate_coverage * 0.7 + job_coverage * 0.3) * 100
+    
+    return min(int(score), 100)
 
 
 # PSEUDOCODE: Compares location strings with exact/partial/no match scoring
@@ -101,11 +109,11 @@ def generate_candidate_recommendations(job_id):
         )
         location_score = calculate_location_match(profile.location or "", job.location)
 
-        # Weighted composite score: 60% skills, 40% location
-        composite_score = int((skill_score * 0.6) + (location_score * 0.4))
+        # Weighted composite score: 70% skills, 30% location
+        composite_score = int((skill_score * 0.7) + (location_score * 0.3))
 
         # Only save recommendations with meaningful match scores
-        if composite_score > 20:
+        if composite_score > 15:
             recommendations.append({
                 'candidate': profile.user,
                 'score': composite_score
@@ -162,11 +170,11 @@ def generate_job_recommendations(user):
         )
         location_score = calculate_location_match(profile.location or "", job.location)
 
-        # Weighted composite score: 60% skills, 40% location
-        composite_score = int((skill_score * 0.6) + (location_score * 0.4))
+        # Weighted composite score: 70% skills, 30% location
+        composite_score = int((skill_score * 0.7) + (location_score * 0.3))
 
         # Only save recommendations with meaningful match scores
-        if composite_score > 20:
+        if composite_score > 15:
             recommendations.append({
                 'job': job,
                 'score': composite_score
