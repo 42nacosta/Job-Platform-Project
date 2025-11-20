@@ -12,10 +12,12 @@ class Job(models.Model):
     salary = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     location = models.TextField(max_length=128, default="")
     category = models.TextField(max_length=128, default="")
-
+    #extra info for map api
+    latitude = models.FloatField(null=True, blank=True)
+    longtitude = models.FloatField(null=True, blank=True)
+    
     def __str__(self):
         return str(self.id) + ' - ' + self.title
-
 
 class Application(models.Model):
     class Status(models.TextChoices):

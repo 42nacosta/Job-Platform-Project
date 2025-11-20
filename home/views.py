@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.views.decorators.http import require_POST
@@ -9,6 +10,7 @@ from .recommendations import generate_candidate_recommendations, generate_job_re
 from django.db import models
 from django.http import JsonResponse, HttpResponseForbidden, Http404
 from django.db.models import Prefetch
+from django.conf import settings
 from home.forms import SavedCandidateSearchForm
 from home.models import SavedCandidateSearch, SavedCandidateMatch
 from home.services.saved_searches import run_search_and_record_new_matches
@@ -517,3 +519,44 @@ def saved_search_mark_seen(request):
         return JsonResponse({"ok": False})
     SavedCandidateMatch.objects.filter(search__owner=request.user, seen=False).update(seen=True)
     return JsonResponse({"ok": True})
+
+def job_map(request):
+    template_data = {
+        'title': 'Job Posts Map',
+        'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY
+    }
+    return render(request, 'home/job_map.html', {'template_data': template_data})
+
+def map_data_api(request):
+    jobs_location = OrderedDict()
+
+    coords = {
+        "Atlanta, GA": (33.7501, -84.3885),
+        "New York City, NY": (40.7128, -74.0060),
+        "San Francisco, CA": (37.7749, -122.4194),
+    }
+    for job in Job.objects.order_by("location", "date"):
+        loc = job.location
+
+        if loc not in coords:
+            continue
+        lat, lng = coords[loc]
+
+        if loc not in jobs_location:
+            jobs_location[loc] = {
+                "location": job.location,
+                "lat": lat,
+                "lng": lng,
+                "jobs": [],
+            }
+        
+        jobs_location[loc]['jobs'].append({
+            "id": job.id,
+            "title": job.title,
+            "description": job.description,
+            "salary": job.salary,
+            "date": job.date.strftime("%b, %d, %Y"),
+            "category": job.category,
+        })
+
+    return JsonResponse(list(jobs_location.values()), safe=False)

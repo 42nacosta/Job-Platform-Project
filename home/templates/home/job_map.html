@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">{{ template_data.title }}</h1>
+
+    {% if template_data.google_maps_api_key %}
+    <div class="row">
+        <div class="col-md-8">
+            <div id="map" style="height: 600px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></div>
+        </div>
+        <div class="col-md-4">
+            <div id="region-details" class="card" style="height: 600px; overflow-y: auto;">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Jobs in <span id="selected-city">Select a City</span></h5>
+                </div>
+                <div class="card-body">
+                    <div id="job-list">
+                        <p class="text-muted">Click a city marker to see jobs.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // location-feature-branch: Enhanced map with clickable markers and sidebar details
+        function initMap() {
+            const map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 4,
+                center: { lat: 39.8283, lng: -98.5795 }
+            });
+
+            fetch('/api/map_data_api/')
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data.length);
+                    if (data.length === 0) {
+                        alert('No job data available. Please ensure there are orders with user location data.');
+                        return;
+                    }
+
+                    const bounds = new google.maps.LatLngBounds();
+
+                    data.forEach(item => {
+                        const marker = new google.maps.Marker({
+                            position: { lat: item.lat, lng: item.lng },
+                            map: map,
+                            title: item.location,
+                        });
+
+                        marker.addListener('click', () => {
+                            displayRegionDetails(item);
+                        });
+
+                        bounds.extend(marker.getPosition());
+                    });
+
+                    if (!bounds.isEmpty()) {
+                        map.fitBounds(bounds);
+                    }
+
+                    // Auto-select first city for convenience
+                    if (data.length > 0) {
+                        displayRegionDetails(data[0]);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching job data:', error);
+                    alert('Error loading job data. Please try again later.');
+                });
+        }
+
+        function displayRegionDetails(cityData) {
+            const cityLabel = cityData.location;
+            document.getElementById('selected-city').textContent = cityLabel || 'Select a City';
+
+            if (!Array.isArray(cityData.jobs) || cityData.jobs.length === 0) {
+                document.getElementById('job-list').innerHTML = '<p class="text-muted">No jobs posted in this city yet.</p>';
+                return;
+            }
+
+            const jobListHTML = cityData.jobs.map((job, index) => `
+                <div class="job-item mb-3 pb-3 border-bottom">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1">${index + 1}. ${job.title}</h6>
+                            <div class="small text-muted">
+                                <span class="badge bg-primary me-1">Date Posted: ${job.date}</span>
+                                <span class="badge bg-success me-1">$${job.salary}</span>
+                            </div>
+                        </div>
+                        <a href="/${job.id}/" class="btn btn-sm btn-outline-primary">
+                            View
+                        </a>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('job-list').innerHTML = jobListHTML;
+        }
+    </script>
+
+    <!-- Google Maps JS API loaded with callback to initMap() -->
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ template_data.google_maps_api_key }}&callback=initMap" async defer></script>
+
+    <div class="mt-4 mb-5">
+        <h5>About This Map</h5>
+        <p>This map highlights job posts by city. Click any marker to jobs posted in that region, including pay and field.</p>
+    </div>
+
+    {% else %}
+    <div class="alert alert-warning" role="alert">
+        <h4 class="alert-heading">Google Maps API Key Missing</h4>
+        <p>To display the job map, please set the <code>GOOGLE_MAPS_API_KEY</code> environment variable with a valid Google Maps API key.</p>
+        <hr>
+        <p class="mb-0">You can obtain a Google Maps API key from the <a href="https://console.cloud.google.com/google/maps-apis" target="_blank">Google Cloud Console</a>.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -26,4 +26,6 @@ urlpatterns = [
     path("saved-searches/<int:pk>/matches", views.saved_search_matches, name="saved_search_matches"),
     path("notifications/unread-count", views.saved_search_unread_count, name="saved_search_unread_count"),
     path("notifications/mark-seen", views.saved_search_mark_seen, name="saved_search_mark_seen"),
+    path('job_map/', views.job_map, name='home.job_map'),
+    path('api/map_data_api/', views.map_data_api, name='home.map_data_api'),
 ]
