@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -26,7 +27,7 @@ SECRET_KEY = 'django-insecure-=h+qd*@#)+p9pq^f83qg!b(o2@j-t^e^&-w+zbexzp(vlzmf9-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -133,4 +134,5 @@ STATICFILES_DIRS = [
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
-GOOGLE_MAPS_API_KEY = 'AIzaSyDitqCrzN1EjLNPeRNcRC6TKNG1Tg_FrCM'
+#add from google maps api key
+API_KEY = config(GOOGLE_MAPS_API_KEY)

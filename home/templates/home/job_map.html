@@ -6,6 +6,18 @@
     {% if template_data.google_maps_api_key %}
     <div class="row">
         <div class="col-md-8">
+            <p>Choose Your Distance Here: </p>
+            <form method="GET" class="mt-4">
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-md-3">
+                        <label for="search" class="form-label mb-1">Distance (miles)</label>
+                        <div class="input-group">
+                            <input type="text" id="search" placeholder="10" class="form-control" name="search" value="{{ template_data.search_term }}">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary pm-5" type="submit">Submit</button>
+                </div>
+            </form>
             <div id="map" style="height: 600px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></div>
         </div>
         <div class="col-md-4">
