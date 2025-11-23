@@ -7,15 +7,19 @@
     <div class="row">
         <div class="col-md-8">
             <p>Choose Your Distance Here: </p>
-            <form method="GET" class="mt-4">
+            <form method="GET" class="mt-4" id="distance-form">
                 <div class="row g-3 align-items-end">
                     <div class="col-12 col-md-3">
-                        <label for="search" class="form-label mb-1">Distance (miles)</label>
+                        <label for="distance" class="form-label mb-1">Distance (miles)</label>
                         <div class="input-group">
-                            <input type="text" id="search" placeholder="10" class="form-control" name="search" value="{{ template_data.search_term }}">
+                            <input type="text" id="distance" placeholder="10" class="form-control" name="distance" value="{{ template_data.distance }}">
+                        </div>
+                        <label for="location" class="form-label mb-1">Location (city, state)</label>
+                        <div class="input-group">
+                            <input type="text" id="location" placeholder="10" class="form-control" name="location" value="{{ template_data.location }}">
                         </div>
                     </div>
-                    <button class="btn btn-primary pm-5" type="submit">Submit</button>
+                    <button class="btn btn-primary mb-3" type="submit">Submit</button>
                 </div>
             </form>
             <div id="map" style="height: 600px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></div>
@@ -36,50 +40,18 @@
 
     <script>
         // location-feature-branch: Enhanced map with clickable markers and sidebar details
+        let map;
+        let markers = [];
         function initMap() {
-            const map = new google.maps.Map(document.getElementById('map'), {
+            map = new google.maps.Map(document.getElementById('map'), {
                 zoom: 4,
                 center: { lat: 39.8283, lng: -98.5795 }
             });
 
-            fetch('/api/map_data_api/')
-                .then(response => response.json())
-                .then(data => {
-                    console.log(data.length);
-                    if (data.length === 0) {
-                        alert('No job data available. Please ensure there are orders with user location data.');
-                        return;
-                    }
+            const distance = document.getElementById('distance').value;
+            const location = document.getElementById('location').value;
 
-                    const bounds = new google.maps.LatLngBounds();
-
-                    data.forEach(item => {
-                        const marker = new google.maps.Marker({
-                            position: { lat: item.lat, lng: item.lng },
-                            map: map,
-                            title: item.location,
-                        });
-
-                        marker.addListener('click', () => {
-                            displayRegionDetails(item);
-                        });
-
-                        bounds.extend(marker.getPosition());
-                    });
-
-                    if (!bounds.isEmpty()) {
-                        map.fitBounds(bounds);
-                    }
-
-                    // Auto-select first city for convenience
-                    if (data.length > 0) {
-                        displayRegionDetails(data[0]);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching job data:', error);
-                    alert('Error loading job data. Please try again later.');
-                });
+            fetchJobs(distance, location);
         }
 
         function displayRegionDetails(cityData) {
@@ -110,6 +82,56 @@
 
             document.getElementById('job-list').innerHTML = jobListHTML;
         }
+
+        function fetchJobs(distance, location) {
+            fetch(`/api/map_data_api/?distance=${distance}&location=${encodeURIComponent(location)}`)
+                .then(response => response.json())
+                .then(data => updateMap(data))
+                .catch(error => {
+                    console.error('Error fetching job data:', error);
+                    alert('Error loading job data. Please try again later.');
+                });
+}       
+
+        function updateMap(data) {
+            markers.forEach(marker => marker.setMap(null));
+            markers = [];
+            const bounds = new google.maps.LatLngBounds();
+
+            data.forEach(item => {
+                const marker = new google.maps.Marker({
+                    position: { lat: item.lat, lng: item.lng },
+                    map: map,
+                    title: item.location,
+                });
+
+                markers.push(marker);
+
+                marker.addListener('click', () => {
+                    displayRegionDetails(item);
+                });
+
+                bounds.extend(marker.getPosition());
+            });
+
+            if (!bounds.isEmpty()) {
+                map.fitBounds(bounds);
+            }
+
+            // Auto-select first city for convenience
+            if (data.length > 0) {
+                displayRegionDetails(data[0]);
+            }
+        }
+
+        document.getElementById('distance-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const distance = document.getElementById('distance').value;
+        const location = document.getElementById('location').value;
+
+        fetchJobs(distance, location);
+        });
     </script>
 
     <!-- Google Maps JS API loaded with callback to initMap() -->

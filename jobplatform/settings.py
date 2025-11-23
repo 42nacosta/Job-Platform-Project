@@ -135,4 +135,4 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
 #add from google maps api key
-API_KEY = config(GOOGLE_MAPS_API_KEY)
+GOOGLE_MAPS_API_KEY = config('GOOGLE_API_KEY')

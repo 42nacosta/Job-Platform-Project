@@ -14,6 +14,7 @@ from django.conf import settings
 from home.forms import SavedCandidateSearchForm
 from home.models import SavedCandidateSearch, SavedCandidateMatch
 from home.services.saved_searches import run_search_and_record_new_matches
+import math
 
 # Create your views here.
 def index(request):
@@ -527,20 +528,51 @@ def job_map(request):
     }
     return render(request, 'home/job_map.html', {'template_data': template_data})
 
+@login_required
 def map_data_api(request):
+    #estimation of distance between two latitude points
+    def haversine(lat1, lon1, lat2, lon2):
+        R = 3958.8  # Earth radius in miles
+
+        lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
+        dlat = lat2 - lat1
+        dlon = lon2 - lon1
+
+        a = math.sin(dlat/2)**2 + math.cos(lat1)*math.cos(lat2)*math.sin(dlon/2)**2
+        c = 2 * math.asin(math.sqrt(a))
+        return R * c
+    
     jobs_location = OrderedDict()
+    print("GET Data", request.GET)
+    if not request.GET.get('distance'):
+        max_distance = math.inf
+    else:
+        max_distance = float(request.GET.get('distance'))
 
     coords = {
         "Atlanta, GA": (33.7501, -84.3885),
         "New York City, NY": (40.7128, -74.0060),
         "San Francisco, CA": (37.7749, -122.4194),
     }
+
+    user_location = request.GET.get('location', 'Atlanta, GA')
+    print(user_location)
+    if user_location in coords:
+        user_lat, user_lng = coords[user_location]
+    else:
+        #placeholde default if no cities/states match
+        user_lat, user_lng = (0, 0)
+
     for job in Job.objects.order_by("location", "date"):
         loc = job.location
 
         if loc not in coords:
             continue
         lat, lng = coords[loc]
+
+        curr_distance = haversine(user_lat, user_lng, lat, lng)
+        if curr_distance > max_distance:
+            continue
 
         if loc not in jobs_location:
             jobs_location[loc] = {
