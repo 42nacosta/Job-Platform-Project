@@ -34,6 +34,7 @@
             {% if request.user.is_authenticated and request.user.profile.is_recruiter%}
               <a class="nav-link" href="{% url 'home.candidates' %}">Candidates</a>
               <a class="nav-link" href="{% url 'pipeline-board' %}">Pipeline</a>
+              <a class="nav-link" href="{% url 'home.applicant_map' %}">Applicant Map</a>
               <a class="nav-link position-relative" href="{% url 'saved_search_list' %}">
                 <i class="fa-solid fa-bell"></i> Saved Searches
                 <span id="notifBadge" 
