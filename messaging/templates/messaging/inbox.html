@@ -1,13 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container mt-4" style="max-width:900px;">
+<!-- Messaging Page: Inbox list with application and direct message conversations -->
+<div class="container mt-4" style="max-width:900px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 16px; line-height: 1.6;">
   <section class="bubble-card mb-4">
-    <h1 class="mb-0">Inbox</h1>
+    <h1 class="mb-0" style="font-weight: 600; font-size: 1.75rem;">Inbox</h1>
   </section>
 
+  <!-- Messaging Page: Application-based conversations section -->
   <section class="card p-4 mb-4">
-    <h5 class="mb-3">Application Conversations</h5>
-    <ul class="list-unstyled mb-0">
+    <h5 class="mb-3" style="font-weight: 600; font-size: 1.15rem;">Application Conversations</h5>
+    <ul class="list-unstyled mb-0" style="font-size: 1.05rem;">
       {% for conv in conversations %}
         {% with app=conv.application %}
           <li class="mb-2">
@@ -22,9 +24,10 @@
     </ul>
   </section>
 
+  <!-- Messaging Page: Direct message conversations section -->
   <section class="card p-4">
-    <h5 class="mb-3">Direct Messages</h5>
-    <ul class="list-unstyled mb-0">
+    <h5 class="mb-3" style="font-weight: 600; font-size: 1.15rem;">Direct Messages</h5>
+    <ul class="list-unstyled mb-0" style="font-size: 1.05rem;">
       {% for d in direct_conversations %}
         {% if d.user_one == request.user %}
           {% with other=d.user_two %}

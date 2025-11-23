@@ -1,22 +1,27 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Conversation — {{ application.job.title }} with {{ application.applicant.username }}</h2>
+<!-- Messaging Page: Application conversation thread with send message form -->
+<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 16px; line-height: 1.6;">
+<h2 style="font-weight: 600; font-size: 1.5rem; margin-bottom: 1.5rem;">Conversation — {{ application.job.title }} with {{ application.applicant.username }}</h2>
 
-<ul>
+<!-- Messaging Page: Message list displaying sender, timestamp, and message body -->
+<ul style="font-size: 1.05rem;">
   {% for m in conv.messages.all %}
-    <li style="margin-bottom:8px;">
-      <strong>{{ m.sender.username }}</strong> — {{ m.created_at|date:"Y-m-d H:i" }}<br>
-      {{ m.body|linebreaksbr }}
+    <li style="margin-bottom: 12px; padding: 10px; background: #f8f9fa; border-radius: 6px;">
+      <strong style="font-weight: 600;">{{ m.sender.username }}</strong> — <span style="color: #6c757d; font-size: 0.95rem;">{{ m.created_at|date:"Y-m-d H:i" }}</span><br>
+      <span style="margin-top: 4px; display: block;">{{ m.body|linebreaksbr }}</span>
     </li>
   {% empty %}
     <li>No messages yet.</li>
   {% endfor %}
 </ul>
 
-<form method="post" action="{% url 'messaging:send_message' application.id %}">
+<!-- Messaging Page: Send new message form -->
+<form method="post" action="{% url 'messaging:send_message' application.id %}" style="margin-top: 1.5rem;">
   {% csrf_token %}
-  <textarea name="body" rows="3" maxlength="2000" placeholder="Write a message…" required></textarea>
+  <textarea name="body" rows="3" maxlength="2000" placeholder="Write a message…" required style="width: 100%; font-size: 1.05rem; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-family: inherit;"></textarea>
   <br>
-  <button type="submit">Send</button>
+  <button type="submit" class="btn btn-primary" style="font-size: 1.05rem; margin-top: 8px;">Send</button>
 </form>
+</div>
 {% endblock %}

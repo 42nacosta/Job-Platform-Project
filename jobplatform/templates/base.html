@@ -26,7 +26,9 @@
           <div class="navbar-nav ms-auto navbar-ml align-items-lg-center">
             <a class="nav-link" href="{% url 'home.index' %}">Home</a>
             <a class="nav-link" href="{% url 'home.about' %}">About</a>
-            <a class="nav-link" href="{% url 'home.job_map' %}">Location Map</a>
+            <a class="nav-link" href="{% url 'home.job_map' %}">
+              Job Map
+            </a>
             {% if request.user.is_authenticated %}
               <a class="nav-link" href="{% url 'messaging:inbox' %}">Messages</a>
               <a class="nav-link" href="{% url 'home.apps' %}">My Applications</a>

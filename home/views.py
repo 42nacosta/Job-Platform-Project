@@ -572,6 +572,7 @@ def saved_search_mark_seen(request):
     SavedCandidateMatch.objects.filter(search__owner=request.user, seen=False).update(seen=True)
     return JsonResponse({"ok": True})
 
+# Location Map Page: Render map template with Google Maps API key for user
 def job_map(request):
     template_data = {
         'title': 'Job Posts Map',
@@ -579,9 +580,10 @@ def job_map(request):
     }
     return render(request, 'home/job_map.html', {'template_data': template_data})
 
+# Location Map Page: API endpoint to filter and return job data based on location/distance
 @login_required
 def map_data_api(request):
-    # Haversine distance in miles
+    # Location Map Page: Calculate geographic distance between two points using Haversine formula
     def haversine(lat1, lon1, lat2, lon2):
         R = 3958.8  # Earth radius in miles
         lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
@@ -591,11 +593,11 @@ def map_data_api(request):
         c = 2 * math.asin(math.sqrt(a))
         return R * c
 
-    # Parse filters
+    # Location Map Page: Parse user filters from request parameters
     max_distance = float(request.GET.get("distance") or math.inf)
     user_location = request.GET.get("location", None)
 
-    # If the user entered a location, geocode it
+    # Location Map Page: Convert user's city to coordinates for distance filtering
     if user_location:
         user_lat, user_lng = geocode_location(user_location)
     else:
@@ -604,7 +606,7 @@ def map_data_api(request):
 
     jobs_by_city = OrderedDict()
 
-    # Loop through all jobs
+    # Location Map Page: Loop through jobs, filter by distance, group by city
     for job in Job.objects.order_by("location", "date"):
         # Must have coordinates (from the geocoding process at job creation)
         if job.latitude is None or job.longitude is None:
@@ -612,7 +614,7 @@ def map_data_api(request):
 
         lat, lng = job.latitude, job.longitude
 
-        # If distance filtering applies
+        # Location Map Page: Apply distance filtering if user specified location
         if user_lat is not None and user_lng is not None:
             curr_distance = haversine(user_lat, user_lng, lat, lng)
             if curr_distance > max_distance:
@@ -620,6 +622,7 @@ def map_data_api(request):
 
         city = job.location  # Group jobs by the text location
 
+        # Location Map Page: Group jobs by city for marker clustering
         if city not in jobs_by_city:
             jobs_by_city[city] = {
                 "location": city,
@@ -628,6 +631,7 @@ def map_data_api(request):
                 "jobs": []
             }
 
+        # Location Map Page: Add job details to city's job list
         jobs_by_city[city]["jobs"].append({
             "id": job.id,
             "title": job.title,
@@ -793,6 +797,7 @@ def applicant_map_data_api(request):
     
     return JsonResponse(list(applicant_locations.values()), safe=False)
 
+# Location Map Page: Convert city/address to latitude/longitude using Google Geocoding API
 def geocode_location(address):
     if not address:
         return None, None

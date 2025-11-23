@@ -63,6 +63,9 @@
         </div>
     </div>
     
+    <!-- Google Maps JS API loaded with callback to initMap() -->
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ template_data.google_maps_api_key }}&callback=initMap" async defer></script>
+    
     <script>
         let map;
         let markers = [];
@@ -71,21 +74,27 @@
         function initMap() {
             console.log('initMap called');
             
-            map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 4,
-                center: { lat: 39.8283, lng: -98.5795 },
-                mapTypeId: google.maps.MapTypeId.ROADMAP
-            });
+            try {
+                map = new google.maps.Map(document.getElementById('map'), {
+                    zoom: 4,
+                    center: { lat: 39.8283, lng: -98.5795 },
+                    mapTypeId: google.maps.MapTypeId.ROADMAP
+                });
 
-            console.log('Map created, setting up job filter...');
-            
-            document.getElementById('job-filter').addEventListener('change', function() {
-                currentJobFilter = this.value;
-                console.log('Job filter changed to:', currentJobFilter);
+                console.log('Map created successfully, setting up job filter...');
+                
+                document.getElementById('job-filter').addEventListener('change', function() {
+                    currentJobFilter = this.value;
+                    console.log('Job filter changed to:', currentJobFilter);
+                    fetchApplicantData();
+                });
+                
                 fetchApplicantData();
-            });
-            
-            fetchApplicantData();
+            } catch (error) {
+                console.error('Error initializing map:', error);
+                document.getElementById('map').innerHTML = '<div class="alert alert-danger">Error initializing map: ' + error.message + '</div>';
+                document.getElementById('location-info').innerHTML = '<p class="text-danger">Failed to initialize map</p>';
+            }
         }
 
         function fetchApplicantData() {
@@ -268,11 +277,10 @@
 
         window.gm_authFailure = function() {
             console.error('Google Maps API authentication failed');
-            document.getElementById('location-info').innerHTML = '<p class="text-danger">Google Maps API authentication failed</p>';
+            document.getElementById('location-info').innerHTML = '<p class="text-danger">Google Maps API authentication failed. Please check your API key and ensure the Maps JavaScript API is enabled.</p>';
+            document.getElementById('map').innerHTML = '<div class="alert alert-danger">Google Maps API authentication failed. Please check your API key and ensure the Maps JavaScript API is enabled.</div>';
         };
     </script>
-
-    <script src="https://maps.googleapis.com/maps/api/js?key={{ template_data.google_maps_api_key }}&callback=initMap" async defer></script>
 
     <div class="mt-4 mb-5">
         <h5>About This Map</h5>

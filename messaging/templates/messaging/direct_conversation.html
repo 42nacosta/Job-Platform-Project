@@ -1,24 +1,27 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container mt-4" style="max-width:800px;">
-  <h3>Conversation with {{ other.username }}</h3>
+<!-- Messaging Page: Direct conversation thread with another user -->
+<div class="container mt-4" style="max-width:800px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 16px; line-height: 1.6;">
+  <h3 style="font-weight: 600; font-size: 1.4rem; margin-bottom: 1.5rem;">Conversation with {{ other.username }}</h3>
 
-  <ul style="list-style:none; padding:0;">
+  <!-- Messaging Page: Direct message list with sender and timestamp -->
+  <ul style="list-style:none; padding:0; font-size: 1.05rem;">
     {% for m in conv.messages.all %}
-      <li style="margin:10px 0; padding:8px; border:1px solid #ddd; border-radius:8px;">
-        <div><strong>{{ m.sender.username }}</strong> · {{ m.created_at|date:"Y-m-d H:i" }}</div>
-        <div>{{ m.body|linebreaksbr }}</div>
+      <li style="margin:12px 0; padding:12px; border:1px solid #ddd; border-radius:8px; background: #f8f9fa;">
+        <div><strong style="font-weight: 600;">{{ m.sender.username }}</strong> · <span style="color: #6c757d; font-size: 0.95rem;">{{ m.created_at|date:"Y-m-d H:i" }}</span></div>
+        <div style="margin-top: 6px;">{{ m.body|linebreaksbr }}</div>
       </li>
     {% empty %}
       <li>No messages yet. Start the conversation below.</li>
     {% endfor %}
   </ul>
 
-  <form method="post" action="{% url 'messaging:send_direct_message' other.username %}">
+  <!-- Messaging Page: Send direct message form -->
+  <form method="post" action="{% url 'messaging:send_direct_message' other.username %}" style="margin-top: 1.5rem;">
     {% csrf_token %}
-    <textarea name="body" rows="3" maxlength="2000" required style="width:100%;" placeholder="Write a message…"></textarea>
+    <textarea name="body" rows="3" maxlength="2000" required style="width:100%; font-size: 1.05rem; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-family: inherit;" placeholder="Write a message…"></textarea>
     <div class="text-end mt-2">
-      <button class="btn btn-primary" type="submit">Send</button>
+      <button class="btn btn-primary" type="submit" style="font-size: 1.05rem;">Send</button>
     </div>
   </form>
 </div>

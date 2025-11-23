@@ -1,80 +1,208 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4">{{ template_data.title }}</h1>
+<!-- Location Map Page: Main container with custom typography for better readability -->
+<div class="container mt-4" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 16px; line-height: 1.6;">
+    <h1 class="mb-3" style="font-weight: 600; color: #1a1a1a;">Find Jobs Near You</h1>
+    <p class="lead text-muted mb-4" style="font-size: 1.1rem;">Explore job opportunities on an interactive map and filter by your location</p>
 
     {% if template_data.google_maps_api_key %}
-    <div class="row">
-        <div class="col-md-8">
-            <p>Choose Your Distance Here: </p>
-            <form method="GET" class="mt-4" id="distance-form">
-                <div class="row g-3 align-items-end">
-                    <div class="col-12 col-md-3">
-                        <label for="distance" class="form-label mb-1">Distance (miles)</label>
-                        <div class="input-group">
-                            <input type="text" id="distance" placeholder="10" class="form-control" name="distance" value="{{ template_data.distance }}">
-                        </div>
-                        <label for="location" class="form-label mb-1">Location (city, state)</label>
-                        <div class="input-group">
-                            <input type="text" id="location" placeholder="10" class="form-control" name="location" value="{{ template_data.location }}">
+    
+    <!-- Location Map Page: Filter section allowing users to input location and distance preferences -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-3" style="font-weight: 600;">
+                <i class="fas fa-filter me-2"></i>Filter Jobs by Location & Distance
+            </h5>
+            <form method="GET" id="distance-form">
+                <div class="row g-3">
+                    <!-- Location Map Page: Location input with examples of valid city formats -->
+                    <div class="col-md-5">
+                        <label for="location" class="form-label fw-bold">Your Location</label>
+                        <input type="text" 
+                               id="location" 
+                               name="location" 
+                               class="form-control form-control-lg" 
+                               placeholder="e.g., Atlanta, GA"
+                               value="{{ template_data.location }}"
+                               style="font-size: 1.1rem;">
+                        <div class="form-text" style="font-size: 0.95rem;">
+                            <strong>Try:</strong> Atlanta, GA · New York, NY · San Francisco, CA · Austin, TX · Boston, MA
                         </div>
                     </div>
-                    <button class="btn btn-primary mb-3" type="submit">Submit</button>
+                    <!-- Location Map Page: Distance dropdown preventing user input errors -->
+                    <div class="col-md-3">
+                        <label for="distance" class="form-label fw-bold">Distance (miles)</label>
+                        <select id="distance" name="distance" class="form-select form-select-lg" style="font-size: 1.1rem;">
+                            <option value="">All distances</option>
+                            <option value="10" {% if template_data.distance == "10" %}selected{% endif %}>Within 10 miles</option>
+                            <option value="25" {% if template_data.distance == "25" %}selected{% endif %}>Within 25 miles</option>
+                            <option value="50" {% if template_data.distance == "50" %}selected{% endif %}>Within 50 miles</option>
+                            <option value="100" {% if template_data.distance == "100" %}selected{% endif %}>Within 100 miles</option>
+                            <option value="250" {% if template_data.distance == "250" %}selected{% endif %}>Within 250 miles</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary btn-lg w-100 me-2">
+                            <i class="fas fa-search me-2"></i>Find Jobs
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-lg" onclick="resetFilters()" title="Reset filters">
+                            <i class="fas fa-redo" aria-label="Reset"></i>
+                        </button>
+                    </div>
                 </div>
             </form>
-            <div id="map" style="height: 600px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></div>
         </div>
+    </div>
+
+    <!-- Location Map Page: Interactive Google Map container with job markers -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <span style="font-size: 1.1rem; font-weight: 500;"><i class="fas fa-map-marked-alt me-2"></i>Interactive Job Map</span>
+                    <span class="badge bg-light text-dark" id="map-stats" style="font-size: 0.95rem;">Loading...</span>
+                </div>
+                <div class="card-body p-0">
+                    <div id="map" style="height: 600px; width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+        <!-- Location Map Page: Job listings sidebar displaying details when markers are clicked -->
         <div class="col-md-4">
             <div id="region-details" class="card" style="height: 600px; overflow-y: auto;">
                 <div class="card-header bg-dark text-white">
-                    <h5 class="mb-0">Jobs in <span id="selected-city">Select a City</span></h5>
+                    <h5 class="mb-0" style="font-size: 1.15rem; font-weight: 500;">
+                        <i class="fas fa-briefcase me-2"></i>
+                        Jobs in <span id="selected-city">Select a City</span>
+                    </h5>
+                    <small class="text-light" id="job-count" style="font-size: 0.9rem;">Click a marker to view jobs</small>
                 </div>
-                <div class="card-body">
+                <div class="card-body" style="font-size: 1rem;">
                     <div id="job-list">
-                        <p class="text-muted">Click a city marker to see jobs.</p>
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-map-marker-alt fa-3x mb-3 opacity-50"></i>
+                            <p>Click on any city marker on the map to see available jobs in that location.</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Location Map Page: User guidance section showing how to use the map and available cities -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body" style="font-size: 1.05rem;">
+                    <h5 class="card-title" style="font-weight: 600;"><i class="fas fa-info-circle me-2"></i>How to Use This Map</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary mt-3" style="font-weight: 600;">View All Jobs</h6>
+                            <p>Leave the location and distance filters empty to see all available job postings across the country.</p>
+                            
+                            <h6 class="text-primary mt-3" style="font-weight: 600;">Filter by Location</h6>
+                            <p>Enter your city and state (e.g., "Atlanta, GA") and select a distance to find jobs near you.</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-primary mt-3" style="font-weight: 600;">Cities with Jobs</h6>
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="badge bg-secondary">Atlanta, GA</span>
+                                <span class="badge bg-secondary">Austin, TX</span>
+                                <span class="badge bg-secondary">Boston, MA</span>
+                                <span class="badge bg-secondary">Chicago, IL</span>
+                                <span class="badge bg-secondary">Dallas, TX</span>
+                                <span class="badge bg-secondary">Denver, CO</span>
+                                <span class="badge bg-secondary">Los Angeles, CA</span>
+                                <span class="badge bg-secondary">Miami, FL</span>
+                                <span class="badge bg-secondary">New York, NY</span>
+                                <span class="badge bg-secondary">Portland, OR</span>
+                                <span class="badge bg-secondary">San Diego, CA</span>
+                                <span class="badge bg-secondary">San Francisco, CA</span>
+                                <span class="badge bg-secondary">Seattle, WA</span>
+                                <span class="badge bg-secondary">Washington, DC</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Location Map Page: Load Google Maps API with callback to initialize the map -->
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ template_data.google_maps_api_key }}&callback=initMap" async defer></script>
+
     <script>
-        // location-feature-branch: Enhanced map with clickable markers and sidebar details
+        // Location Map Page: Global variables for map instance, markers array, and job data
         let map;
         let markers = [];
+        let allJobsData = [];
+        
+        // Location Map Page: Reset filters to show all jobs nationwide
+        function resetFilters() {
+            document.getElementById('location').value = '';
+            document.getElementById('distance').value = '';
+            document.getElementById('distance-form').submit();
+        }
+        
+        // Location Map Page: Initialize Google Maps centered on US, set up controls and fetch initial job data
         function initMap() {
-            map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 4,
-                center: { lat: 39.8283, lng: -98.5795 }
-            });
+            console.log('Initializing Google Maps...');
+            try {
+                map = new google.maps.Map(document.getElementById('map'), {
+                    zoom: 4,
+                    center: { lat: 39.8283, lng: -98.5795 },
+                    mapTypeControl: true,
+                    streetViewControl: false,
+                    fullscreenControl: true
+                });
+                console.log('Map initialized successfully');
 
-            const distance = document.getElementById('distance').value;
-            const location = document.getElementById('location').value;
+                const distance = document.getElementById('distance').value;
+                const location = document.getElementById('location').value;
 
-            fetchJobs(distance, location);
+                fetchJobs(distance, location);
+            } catch (error) {
+                console.error('Error initializing map:', error);
+                document.getElementById('map').innerHTML = '<div class="alert alert-danger m-3">Error initializing map: ' + error.message + '</div>';
+            }
         }
 
+        // Location Map Page: Display job details in sidebar when user clicks a city marker
         function displayRegionDetails(cityData) {
             const cityLabel = cityData.location;
             document.getElementById('selected-city').textContent = cityLabel || 'Select a City';
 
             if (!Array.isArray(cityData.jobs) || cityData.jobs.length === 0) {
-                document.getElementById('job-list').innerHTML = '<p class="text-muted">No jobs posted in this city yet.</p>';
+                document.getElementById('job-count').textContent = 'No jobs available';
+                document.getElementById('job-list').innerHTML = '<p class="text-muted text-center py-4">No jobs posted in this city yet.</p>';
                 return;
             }
 
+            const jobCount = cityData.jobs.length;
+            document.getElementById('job-count').textContent = `${jobCount} job${jobCount !== 1 ? 's' : ''} available`;
+
+            // Location Map Page: Generate HTML for job listing cards with title, salary, date, category
             const jobListHTML = cityData.jobs.map((job, index) => `
                 <div class="job-item mb-3 pb-3 border-bottom">
                     <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6 class="mb-1">${index + 1}. ${job.title}</h6>
-                            <div class="small text-muted">
-                                <span class="badge bg-primary me-1">Date Posted: ${job.date}</span>
-                                <span class="badge bg-success me-1">$${job.salary}</span>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-2">
+                                <span class="badge bg-light text-dark me-2">${index + 1}</span>
+                                ${job.title}
+                            </h6>
+                            <div class="small mb-2">
+                                <span class="badge bg-primary me-1">
+                                    <i class="fas fa-calendar-alt me-1"></i>${job.date}
+                                </span>
+                                <span class="badge bg-success me-1">
+                                    <i class="fas fa-dollar-sign me-1"></i>${job.salary}
+                                </span>
+                                ${job.category ? `<span class="badge bg-info">${job.category}</span>` : ''}
                             </div>
+                            <p class="small text-muted mb-0">${job.description ? job.description.substring(0, 100) + '...' : ''}</p>
                         </div>
-                        <a href="/${job.id}/" class="btn btn-sm btn-outline-primary">
-                            View
+                        <a href="/${job.id}/" class="btn btn-sm btn-outline-primary ms-2">
+                            View Details
                         </a>
                     </div>
                 </div>
@@ -83,39 +211,122 @@
             document.getElementById('job-list').innerHTML = jobListHTML;
         }
 
+        // Location Map Page: Fetch job data from backend API based on distance and location filters
         function fetchJobs(distance, location) {
-            fetch(`/api/map_data_api/?distance=${distance}&location=${encodeURIComponent(location)}`)
-                .then(response => response.json())
-                .then(data => updateMap(data))
+            const url = `/api/map_data_api/?distance=${distance}&location=${encodeURIComponent(location)}`;
+            
+            // Show loading state
+            document.getElementById('map-stats').textContent = 'Loading jobs...';
+            
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    allJobsData = data;
+                    updateMap(data);
+                    updateStats(data, location);
+                })
                 .catch(error => {
                     console.error('Error fetching job data:', error);
+                    document.getElementById('map-stats').textContent = 'Error loading jobs';
                     alert('Error loading job data. Please try again later.');
                 });
-}       
+        }
+        
+        // Location Map Page: Update statistics header showing total jobs and cities
+        function updateStats(data, filterLocation) {
+            const totalJobs = data.reduce((sum, city) => sum + city.jobs.length, 0);
+            const totalCities = data.length;
+            
+            let statsText = `${totalJobs} job${totalJobs !== 1 ? 's' : ''} in ${totalCities} ${totalCities !== 1 ? 'cities' : 'city'}`;
+            if (filterLocation) {
+                statsText += ` near ${filterLocation}`;
+            }
+            
+            document.getElementById('map-stats').textContent = statsText;
+        }
 
+        // Location Map Page: Clear old markers and create new ones based on job data, size markers by job count
         function updateMap(data) {
+            // Clear existing markers
             markers.forEach(marker => marker.setMap(null));
             markers = [];
+            
+            if (!data || data.length === 0) {
+                document.getElementById('job-list').innerHTML = `
+                    <div class="alert alert-warning m-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        No jobs found matching your criteria. Try expanding your search distance or changing your location.
+                    </div>`;
+                return;
+            }
+            
             const bounds = new google.maps.LatLngBounds();
+            const infoWindow = new google.maps.InfoWindow();
 
+            // Location Map Page: Create marker for each city, add click handler to show jobs
             data.forEach(item => {
+                const jobCount = item.jobs.length;
+                
+                // Create marker with job count
                 const marker = new google.maps.Marker({
                     position: { lat: item.lat, lng: item.lng },
                     map: map,
-                    title: item.location,
+                    title: `${item.location} - ${jobCount} job${jobCount !== 1 ? 's' : ''}`,
+                    label: {
+                        text: jobCount.toString(),
+                        color: 'white',
+                        fontWeight: 'bold',
+                        fontSize: '14px'
+                    },
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: Math.max(12, Math.min(25, 8 + jobCount * 2)),
+                        fillColor: '#0d6efd',
+                        fillOpacity: 0.85,
+                        strokeColor: '#ffffff',
+                        strokeWeight: 2
+                    }
                 });
 
                 markers.push(marker);
 
+                // Click event for marker
                 marker.addListener('click', () => {
                     displayRegionDetails(item);
+                    
+                    // Show info window
+                    infoWindow.setContent(`
+                        <div class="p-2">
+                            <strong>${item.location}</strong><br>
+                            <span class="text-muted">${jobCount} job${jobCount !== 1 ? 's' : ''} available</span>
+                        </div>
+                    `);
+                    infoWindow.open(map, marker);
+                    
+                    // Scroll to job list on mobile
+                    if (window.innerWidth < 768) {
+                        document.getElementById('region-details').scrollIntoView({ behavior: 'smooth' });
+                    }
                 });
 
                 bounds.extend(marker.getPosition());
             });
 
+            // Location Map Page: Auto-fit map bounds to show all markers, prevent over-zooming
             if (!bounds.isEmpty()) {
                 map.fitBounds(bounds);
+                
+                // Prevent over-zooming for single marker
+                google.maps.event.addListenerOnce(map, 'bounds_changed', function() {
+                    if (this.getZoom() > 12) {
+                        this.setZoom(12);
+                    }
+                });
             }
 
             // Auto-select first city for convenience
@@ -124,22 +335,33 @@
             }
         }
 
+        // Location Map Page: Submit form to trigger job filtering when user clicks Find Jobs
         document.getElementById('distance-form').addEventListener('submit', function(event) {
-        event.preventDefault();
-
-        const distance = document.getElementById('distance').value;
-        const location = document.getElementById('location').value;
-
-        fetchJobs(distance, location);
+            event.preventDefault();
+            const distance = document.getElementById('distance').value;
+            const location = document.getElementById('location').value;
+            fetchJobs(distance, location);
         });
+        
+        // Location Map Page: Handle Google Maps API authentication failures gracefully
+        window.gm_authFailure = function() {
+            console.error('Google Maps API authentication failed');
+            document.getElementById('map').innerHTML = '<div class="alert alert-danger m-3">Google Maps API authentication failed. Please check your API key and ensure the Maps JavaScript API is enabled.</div>';
+        };
     </script>
 
-    <!-- Google Maps JS API loaded with callback to initMap() -->
-    <script src="https://maps.googleapis.com/maps/api/js?key={{ template_data.google_maps_api_key }}&callback=initMap" async defer></script>
-
     <div class="mt-4 mb-5">
-        <h5>About This Map</h5>
-        <p>This map highlights job posts by city. Click any marker to jobs posted in that region, including pay and field.</p>
+        <div class="alert alert-info">
+            <h5 class="alert-heading">
+                <i class="fas fa-lightbulb me-2"></i>Tips for Finding Jobs Near You
+            </h5>
+            <ul class="mb-0">
+                <li><strong>Browse All Jobs:</strong> Click "Find Jobs" without entering a location to see all available positions across the country.</li>
+                <li><strong>Search Near You:</strong> Enter your city and state, then select a distance radius to find local opportunities.</li>
+                <li><strong>Explore Cities:</strong> Click on any map marker to see detailed job listings for that location.</li>
+                <li><strong>Remote Jobs:</strong> Some positions may be marked as "Remote" and won't appear on the map but can be found in the main jobs listing.</li>
+            </ul>
+        </div>
     </div>
 
     {% else %}
@@ -147,7 +369,7 @@
         <h4 class="alert-heading">Google Maps API Key Missing</h4>
         <p>To display the job map, please set the <code>GOOGLE_MAPS_API_KEY</code> environment variable with a valid Google Maps API key.</p>
         <hr>
-        <p class="mb-0">You can obtain a Google Maps API key from the <a href="https://console.cloud.google.com/google/maps-apis" target="_blank">Google Cloud Console</a>.</p>
+        <p class="mb-0">You can obtain a Google Maps API key from the <a href="https://console.cloud.google.com/google/maps-apis" target="_blank" rel="noopener">Google Cloud Console</a>.</p>
     </div>
     {% endif %}
 </div>
