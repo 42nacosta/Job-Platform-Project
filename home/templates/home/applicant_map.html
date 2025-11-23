@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Applicant Distribution Map</h2>
+    <p class="text-muted">View where your job applicants are located</p>
+    
+    {% if template_data.google_maps_api_key %}
+    
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title">Filter by Job</h6>
+                    <select id="job-filter" class="form-select">
+                        <option value="all" selected>All Jobs (Combined View)</option>
+                        {% for job in template_data.recruiter_jobs %}
+                            <option value="{{ job.id }}">{{ job.title }} ({{ job.applications.count }} applicants)</option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted mt-2 d-block">Select a specific job to see applicant locations for that position only</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title">Map Summary</h6>
+                    <div id="map-summary">
+                        <p class="text-muted">Loading...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="map" style="height: 600px; width: 100%; border: 1px solid #ddd; border-radius: 8px;"></div>
+    
+    <div class="row mt-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Location Details</h5>
+                </div>
+                <div class="card-body">
+                    <div id="location-info">
+                        <p class="text-muted">Loading applicant data...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Quick Stats</h5>
+                </div>
+                <div class="card-body">
+                    <div id="quick-stats">
+                        <p class="text-muted">Loading...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let map;
+        let markers = [];
+        let currentJobFilter = 'all';
+
+        function initMap() {
+            console.log('initMap called');
+            
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 4,
+                center: { lat: 39.8283, lng: -98.5795 },
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            });
+
+            console.log('Map created, setting up job filter...');
+            
+            document.getElementById('job-filter').addEventListener('change', function() {
+                currentJobFilter = this.value;
+                console.log('Job filter changed to:', currentJobFilter);
+                fetchApplicantData();
+            });
+            
+            fetchApplicantData();
+        }
+
+        function fetchApplicantData() {
+            console.log('Fetching applicant data for job:', currentJobFilter);
+            
+            const url = currentJobFilter === 'all' 
+                ? '/api/applicant_map_data/'
+                : `/api/applicant_map_data/?job_id=${currentJobFilter}`;
+            
+            fetch(url)
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Data received:', data);
+                    updateMap(data);
+                    updateSummary(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching applicant data:', error);
+                    document.getElementById('location-info').innerHTML = '<p class="text-danger">Error loading applicant data: ' + error.message + '</p>';
+                });
+        }
+
+        function updateMap(data) {
+            console.log('Updating map with data:', data);
+            
+            markers.forEach(marker => marker.setMap(null));
+            markers = [];
+            
+            if (!data || data.length === 0) {
+                document.getElementById('location-info').innerHTML = '<p class="text-muted">No applicant location data available for selected filter</p>';
+                return;
+            }
+            
+            const bounds = new google.maps.LatLngBounds();
+            let hasMarkers = false;
+
+            data.forEach((location, index) => {
+                console.log(`Processing location ${index}:`, location);
+                
+                if (!location.lat || !location.lng) {
+                    console.warn('Invalid coordinates for location:', location);
+                    return;
+                }
+                
+                const markerColor = getJobSpecificColor(location, currentJobFilter);
+                
+                const marker = new google.maps.Marker({
+                    position: { lat: parseFloat(location.lat), lng: parseFloat(location.lng) },
+                    map: map,
+                    title: `${location.location} - ${location.count} applicants`,
+                    label: {
+                        text: location.count.toString(),
+                        color: 'white',
+                        fontWeight: 'bold'
+                    },
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: Math.max(15, Math.min(35, 10 + location.count * 3)),
+                        fillColor: markerColor,
+                        fillOpacity: 0.8,
+                        strokeColor: '#fff',
+                        strokeWeight: 2
+                    }
+                });
+
+                markers.push(marker);
+                hasMarkers = true;
+
+                marker.addListener('click', () => {
+                    console.log('Marker clicked:', location);
+                    displayLocationDetails(location);
+                });
+
+                bounds.extend(marker.getPosition());
+            });
+
+            if (hasMarkers) {
+                console.log('Fitting bounds to markers');
+                map.fitBounds(bounds);
+                
+                displayLocationDetails(data[0]);
+            } else {
+                console.warn('No valid markers created');
+                document.getElementById('location-info').innerHTML = '<p class="text-muted">No valid applicant locations found</p>';
+            }
+        }
+
+        function getJobSpecificColor(location, jobFilter) {
+            if (jobFilter === 'all') {
+                return '#2196F3';
+            }
+            
+            const colors = ['#4CAF50', '#FF9800', '#9C27B0', '#F44336', '#00BCD4', '#795548'];
+            const jobId = parseInt(jobFilter);
+            return colors[jobId % colors.length];
+        }
+
+        function updateSummary(data) {
+            const totalApplicants = data.reduce((sum, location) => sum + location.count, 0);
+            const totalLocations = data.length;
+            
+            const jobFilterText = currentJobFilter === 'all' ? 'All Jobs' : 
+                document.querySelector(`#job-filter option[value="${currentJobFilter}"]`).textContent;
+            
+            document.getElementById('map-summary').innerHTML = `
+                <div><strong>Current Filter:</strong> ${jobFilterText}</div>
+                <div><strong>Total Applicants:</strong> ${totalApplicants}</div>
+                <div><strong>Locations:</strong> ${totalLocations} cities</div>
+            `;
+            
+            if (totalLocations > 0) {
+                const topLocation = data.reduce((max, location) => 
+                    location.count > max.count ? location : max, data[0]);
+                    
+                document.getElementById('quick-stats').innerHTML = `
+                    <div class="mb-2">
+                        <small class="text-muted">Top Location:</small><br>
+                        <strong>${topLocation.location}</strong><br>
+                        ${topLocation.count} applicants
+                    </div>
+                    <div>
+                        <small class="text-muted">Geographic Spread:</small><br>
+                        ${totalLocations} different cities
+                    </div>
+                `;
+            }
+        }
+
+        function displayLocationDetails(location) {
+            console.log('Displaying details for location:', location);
+            
+            if (!location.applicants || location.applicants.length === 0) {
+                document.getElementById('location-info').innerHTML = `
+                    <h6>${location.location}</h6>
+                    <p>No applicant details available</p>
+                `;
+                return;
+            }
+
+            const applicantsByJob = {};
+            location.applicants.forEach(app => {
+                if (!applicantsByJob[app.job_title]) {
+                    applicantsByJob[app.job_title] = [];
+                }
+                applicantsByJob[app.job_title].push(app);
+            });
+
+            let applicantList = '';
+            Object.keys(applicantsByJob).forEach(jobTitle => {
+                if (currentJobFilter === 'all') {
+                    applicantList += `<h6 class="mt-3 mb-2 text-primary">${jobTitle}</h6>`;
+                }
+                
+                applicantsByJob[jobTitle].forEach(app => {
+                    applicantList += `
+                        <div class="border-bottom pb-2 mb-2">
+                            <strong>${app.applicant_name}</strong><br>
+                            ${currentJobFilter === 'all' ? '' : `<small class="text-muted">Applied to: ${app.job_title}</small><br>`}
+                            <small class="text-muted">Date: ${app.applied_date}</small><br>
+                            <span class="badge bg-primary">${app.status}</span>
+                        </div>
+                    `;
+                });
+            });
+
+            document.getElementById('location-info').innerHTML = `
+                <h6>${location.location}</h6>
+                <p><strong>${location.count}</strong> applicant${location.count > 1 ? 's' : ''} from this location</p>
+                <div style="max-height: 400px; overflow-y: auto;">
+                    ${applicantList}
+                </div>
+            `;
+        }
+
+        window.gm_authFailure = function() {
+            console.error('Google Maps API authentication failed');
+            document.getElementById('location-info').innerHTML = '<p class="text-danger">Google Maps API authentication failed</p>';
+        };
+    </script>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ template_data.google_maps_api_key }}&callback=initMap" async defer></script>
+
+    <div class="mt-4 mb-5">
+        <h5>About This Map</h5>
+        <p>This map shows clusters of job applicants by their location. Use the dropdown above to filter by specific job postings or view all applicants combined. Larger circles indicate more applicants from that area.</p>
+    </div>
+
+    {% else %}
+    <div class="alert alert-warning">
+        <h4 class="alert-heading">Google Maps API Key Missing</h4>
+        <p>To display the applicant map, please ensure the <code>GOOGLE_MAPS_API_KEY</code> environment variable is set.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

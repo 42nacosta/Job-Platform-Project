@@ -592,3 +592,157 @@ def map_data_api(request):
         })
 
     return JsonResponse(list(jobs_location.values()), safe=False)
+
+# map clustering functions
+
+@login_required
+def applicant_map(request):
+    if not request.user.profile.is_recruiter:
+        return render(request, 'home/forbidden.html', status=403)
+    
+    recruiter_jobs = Job.objects.filter(user=request.user).order_by('-date')
+    
+    template_data = {
+        'title': 'Applicant Location Map',
+        'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY,
+        'recruiter_jobs': recruiter_jobs
+    }
+    return render(request, 'home/applicant_map.html', {'template_data': template_data})
+
+@login_required
+def applicant_map_data_api(request):
+    if not request.user.profile.is_recruiter:
+        return JsonResponse({"error": "Unauthorized"}, status=403)
+    
+    job_id = request.GET.get('job_id')
+    
+    applicant_locations = OrderedDict()
+    
+    coords = {
+        # Major Metropolitan Areas
+        "New York City, NY": (40.7128, -74.0060),
+        "Los Angeles, CA": (34.0522, -118.2437),
+        "Chicago, IL": (41.8781, -87.6298),
+        "Houston, TX": (29.7604, -95.3698),
+        "Phoenix, AZ": (33.4484, -112.0740),
+        "Philadelphia, PA": (39.9526, -75.1652),
+        "San Antonio, TX": (29.4241, -98.4936),
+        "San Diego, CA": (32.7157, -117.1611),
+        "Dallas, TX": (32.7767, -96.7970),
+        "San Jose, CA": (37.3382, -121.8863),
+        
+        # Tech Hubs
+        "San Francisco, CA": (37.7749, -122.4194),
+        "Seattle, WA": (47.6062, -122.3321),
+        "Austin, TX": (30.2672, -97.7431),
+        "Boston, MA": (42.3601, -71.0589),
+        "Denver, CO": (39.7392, -104.9903),
+        "Portland, OR": (45.5152, -122.6784),
+        "Raleigh, NC": (35.7796, -78.6382),
+        "Nashville, TN": (36.1627, -86.7816),
+        
+        # Southeast
+        "Atlanta, GA": (33.7501, -84.3885),
+        "Miami, FL": (25.7617, -80.1918),
+        "Orlando, FL": (28.5383, -81.3792),
+        "Tampa, FL": (27.9506, -82.4572),
+        "Charlotte, NC": (35.2271, -80.8431),
+        "Jacksonville, FL": (30.3322, -81.6557),
+        "New Orleans, LA": (29.9511, -90.0715),
+        "Birmingham, AL": (33.5186, -86.8104),
+        
+        # Midwest
+        "Detroit, MI": (42.3314, -83.0458),
+        "Minneapolis, MN": (44.9778, -93.2650),
+        "Cleveland, OH": (41.4993, -81.6944),
+        "Indianapolis, IN": (39.7684, -86.1581),
+        "Columbus, OH": (39.9612, -82.9988),
+        "Milwaukee, WI": (43.0389, -87.9065),
+        "Kansas City, MO": (39.0997, -94.5786),
+        "St. Louis, MO": (38.6270, -90.1994),
+        "Cincinnati, OH": (39.1031, -84.5120),
+        
+        # Northeast
+        "Washington, DC": (38.9072, -77.0369),
+        "Baltimore, MD": (39.2904, -76.6122),
+        "Pittsburgh, PA": (40.4406, -79.9959),
+        "Buffalo, NY": (42.8864, -78.8784),
+        "Hartford, CT": (41.7658, -72.6734),
+        "Providence, RI": (41.8240, -71.4128),
+        "Albany, NY": (42.6526, -73.7562),
+        
+        # West Coast
+        "Sacramento, CA": (38.5816, -121.4944),
+        "Oakland, CA": (37.8044, -122.2712),
+        "Fresno, CA": (36.7378, -119.7871),
+        "Las Vegas, NV": (36.1699, -115.1398),
+        "Albuquerque, NM": (35.0844, -106.6504),
+        "Salt Lake City, UT": (40.7608, -111.8910),
+        "Boise, ID": (43.6150, -116.2023),
+        
+        # Mountain/Plains
+        "Colorado Springs, CO": (38.8339, -104.8214),
+        "Omaha, NE": (41.2565, -95.9345),
+        "Oklahoma City, OK": (35.4676, -97.5164),
+        "Tulsa, OK": (36.1540, -95.9928),
+        "Wichita, KS": (37.6872, -97.3301),
+        
+        # Additional Major Cities
+        "Richmond, VA": (37.5407, -77.4360),
+        "Norfolk, VA": (36.9148, -76.2587),
+        "Memphis, TN": (35.1495, -90.0490),
+        "Louisville, KY": (38.2527, -85.7585),
+        "Little Rock, AR": (34.7465, -92.2896),
+        "Jackson, MS": (32.2988, -90.1848),
+        "Mobile, AL": (30.6954, -88.0399),
+        "Savannah, GA": (32.0835, -81.0998),
+        
+        # Common Variations/Abbreviations
+        "NYC": (40.7128, -74.0060),
+        "LA": (34.0522, -118.2437),
+        "SF": (37.7749, -122.4194),
+        "DC": (38.9072, -77.0369),
+    }
+    
+    applications_query = Application.objects.filter(
+        job__user=request.user
+    ).select_related('applicant', 'applicant__profile', 'job')
+    
+    if job_id and job_id != 'all':
+        try:
+            job_id = int(job_id)
+            applications_query = applications_query.filter(job_id=job_id)
+        except (ValueError, TypeError):
+            pass
+    
+    applications = applications_query
+    
+    for app in applications:
+        profile = app.applicant.profile
+        loc = profile.location if hasattr(profile, 'location') else None
+        
+        if not loc or loc not in coords:
+            continue
+            
+        lat, lng = coords[loc]
+        
+        if loc not in applicant_locations:
+            applicant_locations[loc] = {
+                "location": loc,
+                "lat": lat,
+                "lng": lng,
+                "applicants": [],
+                "count": 0
+            }
+        
+        applicant_locations[loc]['applicants'].append({
+            "id": app.id,
+            "job_title": app.job.title,
+            "job_id": app.job.id,
+            "applicant_name": f"{profile.firstName} {profile.lastName}" if hasattr(profile, 'firstName') and profile.firstName else app.applicant.username,
+            "applied_date": app.created_at.strftime("%b %d, %Y"),
+            "status": app.status
+        })
+        applicant_locations[loc]['count'] += 1
+    
+    return JsonResponse(list(applicant_locations.values()), safe=False)

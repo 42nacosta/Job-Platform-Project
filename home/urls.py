@@ -28,4 +28,7 @@ urlpatterns = [
     path("notifications/mark-seen", views.saved_search_mark_seen, name="saved_search_mark_seen"),
     path('job_map/', views.job_map, name='home.job_map'),
     path('api/map_data_api/', views.map_data_api, name='home.map_data_api'),
+    # map clustering URLs
+    path('recruiter/applicant-map/', views.applicant_map, name='home.applicant_map'),
+    path('api/applicant_map_data/', views.applicant_map_data_api, name='home.applicant_map_data'),
 ]
