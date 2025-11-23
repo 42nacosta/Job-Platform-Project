@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+import requests
+from django.conf import settings
 
 # Create your models here.
 class Job(models.Model):
@@ -14,7 +16,7 @@ class Job(models.Model):
     category = models.TextField(max_length=128, default="")
     #extra info for map api
     latitude = models.FloatField(null=True, blank=True)
-    longtitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
     
     def __str__(self):
         return str(self.id) + ' - ' + self.title
@@ -134,3 +136,16 @@ class SavedCandidateMatch(models.Model):
 
     def __str__(self):
         return f"{self.search.name} -> {self.candidate.username}"
+
+
+
+
+def geocode_location(address):
+    api_key = settings.GOOGLE_MAPS_API_KEY
+    url = f"https://maps.googleapis.com/maps/api/geocode/json?address={address}&key={api_key}"
+    response = requests.get(url).json()
+
+    if response['status'] == 'OK':
+        location = response['results'][0]['geometry']['location']
+        return location['lat'], location['lng']
+    return None, None

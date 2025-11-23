@@ -16,6 +16,8 @@ from home.models import SavedCandidateSearch, SavedCandidateMatch
 from home.services.saved_searches import run_search_and_record_new_matches
 import math
 
+import requests
+
 # Create your views here.
 def index(request):
     search_term = request.GET.get('search')
@@ -78,38 +80,87 @@ def create_job(request):
         title = request.POST.get('title', '').strip()
         description = request.POST.get('description', '').strip()
         location = request.POST.get('location', '').strip()
-        salary = Decimal(request.POST.get("salary")) or 0
+        salary_str = request.POST.get("salary", "0").strip()
         category = request.POST.get('category', '').strip()
 
-        job = Job.objects.create(user=request.user, title=title, description=description,
-            location=location, salary=int(salary), category=category)
+        # Convert salary to number safely
+        try:
+            salary = int(Decimal(salary_str))
+        except (TypeError, ValueError):
+            salary = 0
 
-        # PSEUDOCODE: After job creation, generate candidate recommendations for this job
-        # Calls recommendation engine to find matching candidates based on skills/location
+        # Get latitude/longitude safely
+        lat, lng = geocode_location(location)
+        if lat is not None:
+            lat = float(lat)
+        if lng is not None:
+            lng = float(lng)
+
+        job = Job.objects.create(
+            user=request.user,
+            title=title,
+            description=description,
+            location=location,
+            salary=salary,
+            category=category,
+            latitude=lat,
+            longitude=lng
+        )
+
+        # Optional: generate candidate recommendations
         generate_candidate_recommendations(job.id)
 
         return redirect('home.show', id=job.id)
-    return render(request, 'home/job_form.html', {'template_data': {'title': 'Post Job'}, 'job': None})
+
+    return render(request, 'home/job_form.html', {
+        'template_data': {'title': 'Post Job'},
+        'job': None
+    })
 
 @login_required
 def edit_job(request, id):
     job = get_object_or_404(Job, id=id)
+
     if job.user != request.user:
         return render(request, 'home/forbidden.html', status=403)
-    if request.method == 'POST':
-        job.title = request.POST.get('title','').strip()
-        job.description = request.POST.get('description','').strip()
-        job.location = request.POST.get('location','').strip()
-        job.salary = Decimal(request.POST.get("salary")) or 0
-        job.category = request.POST.get('category','').strip()
-        job.save()
-        
-        # Regenerate candidate recommendations after job update
-        generate_candidate_recommendations(job.id)
-        
-        return redirect('home.show', id=job.id)
-    return render(request, 'home/job_form.html', {'template_data': {'title': 'Edit Job'}, 'job': job})
 
+    if request.method == 'POST':
+        new_title = request.POST.get('title', '').strip()
+        new_description = request.POST.get('description', '').strip()
+        new_location = request.POST.get('location', '').strip()
+        new_salary_str = request.POST.get("salary", "0").strip()
+        new_category = request.POST.get('category', '').strip()
+
+        # Convert salary safely
+        try:
+            new_salary = int(Decimal(new_salary_str))
+        except (TypeError, ValueError):
+            new_salary = 0
+
+        # Update latitude/longitude if location changed
+        if new_location != job.location:
+            lat, lng = geocode_location(new_location)
+            if lat is not None:
+                job.latitude = float(lat)
+            if lng is not None:
+                job.longitude = float(lng)
+
+        # Update fields
+        job.title = new_title
+        job.description = new_description
+        job.location = new_location
+        job.salary = new_salary
+        job.category = new_category
+
+        job.save()
+        generate_candidate_recommendations(job.id)
+
+        return redirect('home.show', id=job.id)
+
+    return render(request, 'home/job_form.html', {
+        'template_data': {'title': 'Edit Job'},
+        'job': job
+    })
 
 @login_required
 @require_POST
@@ -530,68 +581,63 @@ def job_map(request):
 
 @login_required
 def map_data_api(request):
-    #estimation of distance between two latitude points
+    # Haversine distance in miles
     def haversine(lat1, lon1, lat2, lon2):
         R = 3958.8  # Earth radius in miles
-
         lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
         dlat = lat2 - lat1
         dlon = lon2 - lon1
-
-        a = math.sin(dlat/2)**2 + math.cos(lat1)*math.cos(lat2)*math.sin(dlon/2)**2
+        a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
         c = 2 * math.asin(math.sqrt(a))
         return R * c
-    
-    jobs_location = OrderedDict()
-    print("GET Data", request.GET)
-    if not request.GET.get('distance'):
-        max_distance = math.inf
+
+    # Parse filters
+    max_distance = float(request.GET.get("distance") or math.inf)
+    user_location = request.GET.get("location", None)
+
+    # If the user entered a location, geocode it
+    if user_location:
+        user_lat, user_lng = geocode_location(user_location)
     else:
-        max_distance = float(request.GET.get('distance'))
+        # No location entered → distance filtering disabled
+        user_lat, user_lng = None, None
 
-    coords = {
-        "Atlanta, GA": (33.7501, -84.3885),
-        "New York City, NY": (40.7128, -74.0060),
-        "San Francisco, CA": (37.7749, -122.4194),
-    }
+    jobs_by_city = OrderedDict()
 
-    user_location = request.GET.get('location', 'Atlanta, GA')
-    print(user_location)
-    if user_location in coords:
-        user_lat, user_lng = coords[user_location]
-    else:
-        #placeholde default if no cities/states match
-        user_lat, user_lng = (0, 0)
-
+    # Loop through all jobs
     for job in Job.objects.order_by("location", "date"):
-        loc = job.location
-
-        if loc not in coords:
-            continue
-        lat, lng = coords[loc]
-
-        curr_distance = haversine(user_lat, user_lng, lat, lng)
-        if curr_distance > max_distance:
+        # Must have coordinates (from the geocoding process at job creation)
+        if job.latitude is None or job.longitude is None:
             continue
 
-        if loc not in jobs_location:
-            jobs_location[loc] = {
-                "location": job.location,
+        lat, lng = job.latitude, job.longitude
+
+        # If distance filtering applies
+        if user_lat is not None and user_lng is not None:
+            curr_distance = haversine(user_lat, user_lng, lat, lng)
+            if curr_distance > max_distance:
+                continue
+
+        city = job.location  # Group jobs by the text location
+
+        if city not in jobs_by_city:
+            jobs_by_city[city] = {
+                "location": city,
                 "lat": lat,
                 "lng": lng,
-                "jobs": [],
+                "jobs": []
             }
-        
-        jobs_location[loc]['jobs'].append({
+
+        jobs_by_city[city]["jobs"].append({
             "id": job.id,
             "title": job.title,
             "description": job.description,
             "salary": job.salary,
-            "date": job.date.strftime("%b, %d, %Y"),
+            "date": job.date.strftime("%b %d, %Y"),
             "category": job.category,
         })
 
-    return JsonResponse(list(jobs_location.values()), safe=False)
+    return JsonResponse(list(jobs_by_city.values()), safe=False)
 
 # map clustering functions
 
@@ -746,3 +792,20 @@ def applicant_map_data_api(request):
         applicant_locations[loc]['count'] += 1
     
     return JsonResponse(list(applicant_locations.values()), safe=False)
+
+def geocode_location(address):
+    if not address:
+        return None, None
+
+    url = "https://maps.googleapis.com/maps/api/geocode/json"
+    params = {"address": address, "key": settings.GOOGLE_MAPS_API_KEY}
+
+    response = requests.get(url, params=params).json()
+    print("Geocoding response for", address, ":", response)  # <-- add this
+
+    if response["status"] == "OK":
+        loc = response["results"][0]["geometry"]["location"]
+        return float(loc["lat"]), float(loc["lng"])
+    else:
+        print("Geocoding failed:", response["status"], response.get("error_message"))
+        return None, None
