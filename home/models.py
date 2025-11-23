@@ -36,6 +36,10 @@ class Application(models.Model):
     status = models.CharField(max_length=16, choices=Status.choices, default=Status.SUBMITTED, db_index=True,)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    # map clustering fields
+    applicant_location = models.CharField(max_length=100, blank=True, default="")
+    applicant_lat = models.FloatField(null=True, blank=True)
+    applicant_lng = models.FloatField(null=True, blank=True)
 
     class Meta:
         unique_together = ("job", "applicant")
